@@ -4,10 +4,18 @@ import sys, os, random, io
 from PIL import Image
 
 class ImageManipulator(object):
+    """ Class for manipulating an Image """
     def __init__(self, image_path):
         self.image = Image.open(image_path)
 
     def flip_sections(self, n_rows, n_cols):
+        """
+        Cuts the image into n_rows times n_cols sections and flips each of these
+        sections 180 degrees.
+
+        n_rows -- The number of rows to cut the image into
+        n_cols -- The number of cols to cut the image into
+        """
         boxes, new_w, new_h = self.get_boxes_and_new_size(n_rows, n_cols)
         for box in boxes:
             region = self.image.crop(box)
@@ -17,6 +25,13 @@ class ImageManipulator(object):
         self.image = self.image.crop((0, 0, new_w, new_h))
 
     def randomize_sections(self, n_rows, n_cols, ext):
+        """ Cuts the image into n_rows times n_cols sections and randomly
+        switches pairs of sections
+
+        n_rows -- The number of rows to cut the image into
+        n_cols -- The number of cols to cut the image into
+        ext    -- The extension of the image
+        """
         boxes, new_w, new_h = self.get_boxes_and_new_size(n_rows, n_cols)
         random.shuffle(boxes)
 
@@ -41,6 +56,15 @@ class ImageManipulator(object):
         self.image = self.image.crop((0, 0, new_w, new_h))
 
     def get_boxes_and_new_size(self, n_rows, n_cols):
+        """
+        Returns the bounding boxes for n_rows times n_cols sections of the image
+        along with the new width and height of the image. This new width and
+        heigh is caused by the rounding done when calculating section width and
+        height
+
+        n_rows -- The number of rows to cut the image into
+        n_cols -- The number of cols to cut the image into
+        """
         w, h = self.image.size
         section_width = w / n_cols
         section_height = h / n_rows
@@ -55,6 +79,11 @@ class ImageManipulator(object):
         return boxes, section_width * n_cols, section_height * n_rows
 
     def save(self, save_path):
+        """
+        Saves the image
+
+        save_path -- The file name for the image
+        """
         self.image.save(save_path)
 
 if __name__=='__main__':
