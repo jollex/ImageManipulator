@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, random, io
+import argparse, sys, os, random, io
 from PIL import Image
 
 class ImageManipulator(object):
@@ -8,31 +8,38 @@ class ImageManipulator(object):
     def __init__(self, image_path):
         self.image = Image.open(image_path)
 
-    def flip_sections(self, n_rows, n_cols):
+    def rotate_sections(self, box_size, rotate_options):
         """
-        Cuts the image into n_rows times n_cols sections and flips each of these
-        sections 180 degrees.
+        Cuts the image into sections of side length box_size and rotates each
+        one using a randomly selected rotation from rotate_options.
 
-        n_rows -- The number of rows to cut the image into
-        n_cols -- The number of cols to cut the image into
+        box_size -- The length of each side of each box.
+        rotate_options -- A list where the members are all one of None,
+        Image.ROTATE_90, Image.ROTATE_180, or Image.ROTATE_270
         """
-        boxes, new_w, new_h = self.get_boxes_and_new_size(n_rows, n_cols)
+        n_options = len(rotate_options)
+
+        boxes, new_w, new_h = self.get_boxes_and_new_size(box_size)
         for box in boxes:
-            region = self.image.crop(box)
-            region = region.transpose(Image.ROTATE_180)
-            self.image.paste(region, box)
+            log("Box: {}".format(box))
+
+            rotate = rotate_options[random.randint(0, n_options - 1)]
+            if rotate:
+                region = self.image.crop(box)
+                region = region.transpose(rotate)
+                self.image.paste(region, box)
 
         self.image = self.image.crop((0, 0, new_w, new_h))
 
-    def randomize_sections(self, n_rows, n_cols, ext):
-        """ Cuts the image into n_rows times n_cols sections and randomly
-        switches pairs of sections
+    def randomize_sections(self, box_size, ext):
+        """
+        Cuts the image into sections of side length box_size and randomly
+        switches pairs of sections.
 
-        n_rows -- The number of rows to cut the image into
-        n_cols -- The number of cols to cut the image into
+        box_size -- The length of each side of each box.
         ext    -- The extension of the image
         """
-        boxes, new_w, new_h = self.get_boxes_and_new_size(n_rows, n_cols)
+        boxes, new_w, new_h = self.get_boxes_and_new_size(box_size)
         random.shuffle(boxes)
 
         pairs = []
@@ -40,6 +47,8 @@ class ImageManipulator(object):
             pairs.append((boxes[i], boxes[i + 1]))
 
         for pair in pairs:
+            log("Pair: {}".format(pair))
+
             first_box, second_box = pair
 
             first_region_bytes = io.BytesIO()
@@ -55,28 +64,26 @@ class ImageManipulator(object):
 
         self.image = self.image.crop((0, 0, new_w, new_h))
 
-    def get_boxes_and_new_size(self, n_rows, n_cols):
+    def get_boxes_and_new_size(self, box_size):
         """
-        Returns the bounding boxes for n_rows times n_cols sections of the image
-        along with the new width and height of the image. This new width and
-        heigh is caused by the rounding done when calculating section width and
-        height
+        Returns the bounding boxes for as many sections of the image as possible
+        using box_size as the length of each side of the box, along with the new
+        height and width of the image.
 
-        n_rows -- The number of rows to cut the image into
-        n_cols -- The number of cols to cut the image into
+        box_size -- The length of each side of each box.
         """
         w, h = self.image.size
-        section_width = w / n_cols
-        section_height = h / n_rows
+        n_cols = w / box_size
+        n_rows = h / box_size
 
         boxes = []
         for i in range(n_rows):
             for j in range(n_cols):
-                box = (j * section_width, i * section_height,
-                      (j + 1) * section_width, (i + 1) * section_height)
+                box = (j * box_size, i * box_size,
+                      (j + 1) * box_size, (i + 1) * box_size)
                 boxes.append(box)
 
-        return boxes, section_width * n_cols, section_height * n_rows
+        return boxes, box_size * n_cols, box_size * n_rows
 
     def save(self, save_path):
         """
@@ -86,17 +93,29 @@ class ImageManipulator(object):
         """
         self.image.save(save_path)
 
+def log(message):
+    if DEBUG:
+        print message
+
 if __name__=='__main__':
-    if len(sys.argv) == 5:
-        f, e = os.path.splitext(sys.argv[1])
-        x, y = int(sys.argv[2]), int(sys.argv[3])
-        iterations = int(sys.argv[4])
-        for i in range(iterations):
-            im = ImageManipulator(f + e)
-            im.flip_sections(x, y)
-            im.randomize_sections(x, y, e[1:])
-            im.save("{}-{}x{}{}".format(f, x, y, e))
-            x *= 2
-            y *= 2
-    else:
-        print "Usage: {} <image_path> <n_rows> <n_cols> <iterations>".format(sys.argv[0])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('image_path', help='Path to the image to manipulate')
+    parser.add_argument('box_size',
+        help='The size of the boxes the picture will be split into', type=int)
+    parser.add_argument('iterations', help='The number of times to run the\
+        manipulator, multiplying box_size by 2 for each iteration', type=int)
+    parser.add_argument('--debug', help='Use flag to print debugging statements\
+        while the script runs', action='store_true')
+    args = parser.parse_args()
+
+    f, e = os.path.splitext(args.image_path)
+    box_size = args.box_size
+    iterations = args.iterations
+    DEBUG = args.debug
+    for i in range(iterations):
+        im = ImageManipulator(f + e)
+        im.rotate_sections(box_size, [None, Image.ROTATE_90,
+            Image.ROTATE_180, Image.ROTATE_270])
+        im.randomize_sections(box_size, e[1:])
+        im.save("{}-{}{}".format(f, box_size, e))
+        box_size *= 2
