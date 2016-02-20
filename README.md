@@ -1,5 +1,5 @@
 # ImageManipulator
-Some methods for messing around with images using Pillow
+Script for messing around with an image and spitting out a gif
 
 ## Usage
 The simplest way to use the script is to call:
