@@ -16,20 +16,19 @@ class ImageManipulator(object):
         one using a randomly selected rotation from rotate_options.
 
         box_size -- The length of each side of each box.
-        rotate_options -- A list where the members are all one of None,
-        Image.ROTATE_90, Image.ROTATE_180, or Image.ROTATE_270
+        rotate_options -- A list of length at least one where each member are
+        is one of: None, Image.ROTATE_90, Image.ROTATE_180, or Image.ROTATE_270
         """
         n_options = len(rotate_options)
 
         boxes, new_w, new_h = self.get_boxes_and_new_size(box_size)
         for box in boxes:
-            log("Box: {}".format(box))
-
-            rotate = rotate_options[random.randint(0, n_options - 1)]
+            rotate = rotate_options[random.randint(0, n_options - 1)] if n_options > 1 else rotate_options[0]
             if rotate:
                 region = self.image.crop(box)
                 region = region.transpose(rotate)
                 self.image.paste(region, box)
+                log("Rotate box {}".format(box))
 
         self.image = self.image.crop((0, 0, new_w, new_h))
 
@@ -50,8 +49,6 @@ class ImageManipulator(object):
             except IndexError: pass
 
         for pair in pairs:
-            log("Pair: {}".format(pair))
-
             first_box, second_box = pair
 
             first_region_bytes = io.BytesIO()
@@ -64,6 +61,8 @@ class ImageManipulator(object):
 
             self.image.paste(first_region, second_box)
             self.image.paste(second_region, first_box)
+
+            log("Switched boxes {}".format(pair))
 
         self.image = self.image.crop((0, 0, new_w, new_h))
 
@@ -118,6 +117,9 @@ if __name__=='__main__':
     parser.add_argument('-i', '--iterations', default=None, help='The number\
         of times to run the manipulator, multiplying box_size by 2 for each\
         iteration', type=int)
+    parser.add_argument('-f', '--flip', help='Use flag to flip each section\
+        instead of randomly rotating each section a multiple of 90 degrees',
+        action='store_true')
     parser.add_argument('-r', '--random', help='Use flag to randomize position\
         of boxes', action='store_true')
     parser.add_argument('-d', '--debug', help='Use flag to print debugging\
@@ -151,8 +153,11 @@ if __name__=='__main__':
     frames = []
     for box_size in box_sizes:
         im = ImageManipulator(f + e)
-        im.rotate_sections(box_size, [None, Image.ROTATE_90,
-            Image.ROTATE_180, Image.ROTATE_270])
+        if args.flip:
+            im.rotate_sections(box_size, [Image.ROTATE_180])
+        else:
+            im.rotate_sections(box_size, [None, Image.ROTATE_90,
+                Image.ROTATE_180, Image.ROTATE_270])
         if args.random: im.randomize_sections(box_size, e[1:])
         frames.append(im.copy())
 
