@@ -105,7 +105,6 @@ def log(message):
     Simple logging method
 
     message -- The message to be logged"""
-
     if DEBUG:
         print message
 
