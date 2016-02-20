@@ -13,32 +13,32 @@ To not only rotate each box but also randomize the boxes' postition, call:
 ```
 
 ## Examples
-Some examples original images and resulting gifs:
+Some example original images and resulting gifs:
 
-#### Mountains Original
+###### Mountains Original
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/mountains.jpeg "Mountains Original")
-#### Mountains
+###### Mountains
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/mountains.gif "Mountains")
-#### Mountains Random
+###### Mountains Random
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/mountains-random.gif "Mountains Random")
 
-#### Swirls Original
+###### Swirls Original
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/swirls.jpeg "Swirls Original")
-#### Swirls
+###### Swirls
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/swirls.gif "Swirls")
-#### Swirls Random
+###### Swirls Random
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/swirls-random.gif "Swirls Random")
 
-#### Paint Original
+###### Paint Original
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/paint.jpeg "Paint Original")
-#### Paint
+###### Paint
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/paint.gif "Paint")
-#### Paint Random
+###### Paint Random
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/paint-random.gif "Paint Random")
 
-#### Windows Original
+###### Windows Original
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/windows.jpeg "Windows Original")
-#### Windows
+###### Windows
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/windows.gif "Windows")
-#### Windows Random
+###### Windows Random
 ![alt text](https://github.com/jollex/ImageManipulator/raw/master/examples/windows-random.gif "Windows Random")
