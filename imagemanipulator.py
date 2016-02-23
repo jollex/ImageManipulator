@@ -113,7 +113,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('image_path', help='Path to the image to manipulate')
     parser.add_argument('-bs', '--box_size', default=2, help='The size of the\
-        boxes the picture will be split into', type=int)
+        boxes the first frame will be split into', type=int)
     parser.add_argument('-i', '--iterations', default=None, help='The number\
         of times to run the manipulator, multiplying box_size by 2 for each\
         iteration', type=int)
@@ -122,6 +122,8 @@ if __name__=='__main__':
         action='store_true')
     parser.add_argument('-r', '--random', help='Use flag to randomize position\
         of boxes', action='store_true')
+    parser.add_argument('--frames', help='Use flag to save each frame along\
+        with the gif', action='store_true')
     parser.add_argument('-d', '--debug', help='Use flag to print debugging\
         statements while the script runs', action='store_true')
     args = parser.parse_args()
@@ -132,6 +134,7 @@ if __name__=='__main__':
     if e.lower() == '.jpg':
         copyfile(f + e, f + '.jpeg')
         e = '.jpeg'
+
     box_size = args.box_size
     box_sizes = []
 
@@ -159,6 +162,7 @@ if __name__=='__main__':
             im.rotate_sections(box_size, [None, Image.ROTATE_90,
                 Image.ROTATE_180, Image.ROTATE_270])
         if args.random: im.randomize_sections(box_size, e[1:])
+        if args.frames: im.save('{}-{:03d}{}'.format(f, box_size, e))
         frames.append(im.copy())
 
     # Crop all frames to size of smallest frame
