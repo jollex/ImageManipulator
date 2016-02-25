@@ -137,10 +137,15 @@ if __name__=='__main__':
 
     DEBUG = args.debug
 
-    f, e = os.path.splitext(args.image_path)
-    if e.lower() == '.jpg':
-        copyfile(f + e, f + '.jpeg')
-        e = '.jpeg'
+    full_name, _ = os.path.splitext(args.image_path)
+    base_name, ext = os.path.splitext(os.path.basename(args.image_path))
+    if ext.lower() == '.jpg':
+        copyfile(full_name + ext, full_name + '.jpeg')
+        ext = '.jpeg'
+    if os.path.exists(args.output):
+        output = args.output
+    else:
+        output = os.path.dirname(full_name + ext) + '/'
 
     box_size = args.box_size
     box_sizes = []
@@ -152,7 +157,7 @@ if __name__=='__main__':
             box_sizes.append(box_size)
             box_size *= 2
     else:
-        image = Image.open(f + e)
+        image = Image.open(full_name + ext)
         size = image.size
         image.close()
         while box_size * 2 < min(size):
@@ -162,15 +167,15 @@ if __name__=='__main__':
     # Create frames
     frames = []
     for box_size in box_sizes:
-        im = ImageManipulator(f + e)
+        im = ImageManipulator(full_name + ext)
         if args.flip:
             im.rotate_sections(box_size, [Image.ROTATE_180])
         else:
             im.rotate_sections(box_size, [None, Image.ROTATE_90,
                 Image.ROTATE_180, Image.ROTATE_270])
-        if args.random: im.randomize_sections(box_size, e[1:])
-        if args.frames: im.save('{}{}-{:03d}{}'.format(args.output, f, box_size,
-            e))
+        if args.random: im.randomize_sections(box_size, ext[1:])
+        if args.frames: im.save('{}{}-{:03d}{}'.format(output, base_name,
+            box_size, ext))
         frames.append(im.copy())
 
     # Crop all frames to size of smallest frame
@@ -181,5 +186,5 @@ if __name__=='__main__':
     # Loop the animation and save it
     middle_frames = frames[1:-1]
     middle_frames.reverse()
-    images2gif.writeGif("{}{}{}.gif".format(args.output, f,
+    images2gif.writeGif("{}{}{}.gif".format(output, base_name,
         "-random" if args.random else ""), frames + middle_frames)
