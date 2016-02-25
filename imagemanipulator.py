@@ -99,6 +99,10 @@ class ImageManipulator(object):
         """ Returns a copy of the image """
         return self.image.copy()
 
+    def close(self):
+        """ Close the image """
+        self.image.close()
+
 def log(message):
     """
     Simple logging method
@@ -111,21 +115,24 @@ def log(message):
 if __name__=='__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('image_path', help='Path to the image to manipulate')
-    parser.add_argument('-bs', '--box_size', default=2, help='The size of the\
-        boxes the first frame will be split into', type=int)
-    parser.add_argument('-i', '--iterations', default=None, help='The number\
-        of times to run the manipulator, multiplying box_size by 2 for each\
-        iteration', type=int)
-    parser.add_argument('-f', '--flip', help='Use flag to flip each section\
-        instead of randomly rotating each section a multiple of 90 degrees',
-        action='store_true')
-    parser.add_argument('-r', '--random', help='Use flag to randomize position\
-        of boxes', action='store_true')
-    parser.add_argument('--frames', help='Use flag to save each frame along\
-        with the gif', action='store_true')
-    parser.add_argument('-d', '--debug', help='Use flag to print debugging\
-        statements while the script runs', action='store_true')
+    parser.add_argument('image_path', type=str, help='Path to the image to\
+        manipulate')
+    parser.add_argument('-bs', '--box_size', default=2, type=int, help='The\
+        size of the boxes the first frame will be split into')
+    parser.add_argument('-i', '--iterations', default=None, type=int, help='The\
+        number of times to run the manipulator, multiplying box_size by 2 for\
+        each iteration')
+    parser.add_argument('-f', '--flip', action='store_true', help='Use flag to\
+        flip each section instead of randomly rotating each section a multiple\
+        of 90 degrees')
+    parser.add_argument('-r', '--random', action='store_true', help='Use flag\
+        to randomize position of boxes')
+    parser.add_argument('--frames', action='store_true', help='Use flag to save\
+        each frame along with the gif')
+    parser.add_argument('-o', '--output', default='', type=str, help="Path to\
+        directory to save gif and/or frames in.")
+    parser.add_argument('-d', '--debug', action='store_true', help='Use flag to\
+        print debugging statements while the script runs')
     args = parser.parse_args()
 
     DEBUG = args.debug
@@ -162,7 +169,8 @@ if __name__=='__main__':
             im.rotate_sections(box_size, [None, Image.ROTATE_90,
                 Image.ROTATE_180, Image.ROTATE_270])
         if args.random: im.randomize_sections(box_size, e[1:])
-        if args.frames: im.save('{}-{:03d}{}'.format(f, box_size, e))
+        if args.frames: im.save('{}{}-{:03d}{}'.format(args.output, f, box_size,
+            e))
         frames.append(im.copy())
 
     # Crop all frames to size of smallest frame
@@ -171,7 +179,7 @@ if __name__=='__main__':
     frames = map(lambda frame: frame.crop((0, 0, min_w, min_h)), frames)
 
     # Loop the animation and save it
-    all_but_one = frames[:-1]
-    all_but_one.reverse()
-    images2gif.writeGif("{}{}.gif".format(f, "-random" if args.random else ""), frames + all_but_one)
-
+    middle_frames = frames[1:-1]
+    middle_frames.reverse()
+    images2gif.writeGif("{}{}{}.gif".format(args.output, f,
+        "-random" if args.random else ""), frames + middle_frames)
