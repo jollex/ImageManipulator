@@ -79,13 +79,25 @@ class ImageManipulator(object):
         n_rows = h / box_size
 
         boxes = []
-        for i in range(n_rows):
-            for j in range(n_cols):
-                box = (j * box_size, i * box_size,
-                      (j + 1) * box_size, (i + 1) * box_size)
+        if args.vertical:
+            for i in range(n_cols):
+                box = (i * box_size, 0, (i + 1) * box_size, h)
                 boxes.append(box)
 
-        return boxes, box_size * n_cols, box_size * n_rows
+            return boxes, box_size * n_cols, h
+        elif args.horizontal:
+            for i in range(n_rows):
+                box = (0, i * box_size, w, (i + 1) * box_size)
+                boxes.append(box)
+            return boxes, w, box_size * n_rows
+        else:
+            for i in range(n_rows):
+                for j in range(n_cols):
+                    box = (j * box_size, i * box_size,
+                           (j + 1) * box_size, (i + 1) * box_size)
+                    boxes.append(box)
+
+            return boxes, box_size * n_cols, box_size * n_rows
 
     def save(self, save_path):
         """
@@ -122,6 +134,12 @@ if __name__=='__main__':
     parser.add_argument('-i', '--iterations', default=None, type=int, help='The\
         number of times to run the manipulator, multiplying box_size by 2 for\
         each iteration')
+    parser.add_argument('-v', '--vertical', action='store_true', help='Use flag\
+        to use vertical strips instead of square boxes.')
+    parser.add_argument('-ho', '--horizontal', action='store_true', help='Use\
+        flag to use horizontal strips instead of square boxes.')
+    parser.add_argument('-n', '--none', action='store_true', help='Use flag to\
+        not rotate boxes.')
     parser.add_argument('-f', '--flip', action='store_true', help='Use flag to\
         flip each section instead of randomly rotating each section a multiple\
         of 90 degrees')
@@ -129,6 +147,8 @@ if __name__=='__main__':
         to randomize position of boxes')
     parser.add_argument('--frames', action='store_true', help='Use flag to save\
         each frame along with the gif')
+    parser.add_argument('--nogif', action='store_true', help='Use flag to not\
+        create a gif with the resulting frames.')
     parser.add_argument('-o', '--output', default='', type=str, help="Path to\
         directory to save gif and/or frames in.")
     parser.add_argument('-d', '--debug', action='store_true', help='Use flag to\
@@ -147,6 +167,14 @@ if __name__=='__main__':
     else:
         output = os.path.dirname(full_name + ext) + '/'
 
+    if args.flip:
+        rotate_options = [Image.ROTATE_180]
+    elif args.none or args.horizontal or args.vertical:
+        rotate_options = [None]
+    else:
+        rotate_options =[None, Image.ROTATE_90, Image.ROTATE_180,
+            Image.ROTATE_270]
+
     box_size = args.box_size
     box_sizes = []
 
@@ -160,7 +188,10 @@ if __name__=='__main__':
         image = Image.open(full_name + ext)
         size = image.size
         image.close()
-        while box_size * 2 < min(size):
+        if args.vertical: min_size = size[0]
+        elif args.horizontal: min_size = size[1]
+        else: min_size = min(size)
+        while box_size * 2 < min_size:
             box_sizes.append(box_size)
             box_size *= 2
 
@@ -168,15 +199,12 @@ if __name__=='__main__':
     frames = []
     for box_size in box_sizes:
         im = ImageManipulator(full_name + ext)
-        if args.flip:
-            im.rotate_sections(box_size, [Image.ROTATE_180])
-        else:
-            im.rotate_sections(box_size, [None, Image.ROTATE_90,
-                Image.ROTATE_180, Image.ROTATE_270])
+        im.rotate_sections(box_size, rotate_options)
         if args.random: im.randomize_sections(box_size, ext[1:])
-        if args.frames: im.save('{}{}-{:03d}{}'.format(output, base_name,
-            box_size, ext))
+        if args.frames or len(box_sizes) == 1:
+            im.save('{}{}-{:03d}{}'.format(output, base_name, box_size, ext))
         frames.append(im.copy())
+    frames.append(Image.open(full_name + ext))
 
     # Crop all frames to size of smallest frame
     min_w = min(map(lambda frame: frame.size[0], frames))
@@ -186,5 +214,6 @@ if __name__=='__main__':
     # Loop the animation and save it
     middle_frames = frames[1:-1]
     middle_frames.reverse()
-    images2gif.writeGif("{}{}{}.gif".format(output, base_name,
-        "-random" if args.random else ""), frames + middle_frames)
+    if not args.nogif or len(box_sizes) == 1:
+        images2gif.writeGif("{}{}{}.gif".format(output, base_name,
+            "-random" if args.random else ""), frames + middle_frames)
