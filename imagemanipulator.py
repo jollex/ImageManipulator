@@ -204,6 +204,7 @@ if __name__=='__main__':
         if args.frames or len(box_sizes) == 1:
             im.save('{}{}-{:03d}{}'.format(output, base_name, box_size, ext))
         frames.append(im.copy())
+    if args.random: frames.append(Image.open(full_name + ext))
 
     # Crop all frames to size of smallest frame
     min_w = min(map(lambda frame: frame.size[0], frames))
