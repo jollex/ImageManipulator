@@ -129,7 +129,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('image_path', type=str, help='Path to the image to\
         manipulate')
-    parser.add_argument('-bs', '--box_size', default=2, type=int, help='The\
+    parser.add_argument('-bs', '--box_size', default=1, type=int, help='The\
         size of the boxes the first frame will be split into')
     parser.add_argument('-i', '--iterations', default=None, type=int, help='The\
         number of times to run the manipulator, multiplying box_size by 2 for\
@@ -204,7 +204,6 @@ if __name__=='__main__':
         if args.frames or len(box_sizes) == 1:
             im.save('{}{}-{:03d}{}'.format(output, base_name, box_size, ext))
         frames.append(im.copy())
-    frames.append(Image.open(full_name + ext))
 
     # Crop all frames to size of smallest frame
     min_w = min(map(lambda frame: frame.size[0], frames))
