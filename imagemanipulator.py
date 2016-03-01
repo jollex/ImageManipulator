@@ -191,7 +191,7 @@ if __name__=='__main__':
         if args.vertical: min_size = size[0]
         elif args.horizontal: min_size = size[1]
         else: min_size = min(size)
-        while box_size * 2 < min_size:
+        while box_size * 2 <= min_size:
             box_sizes.append(box_size)
             box_size *= 2
 
