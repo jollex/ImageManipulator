@@ -170,7 +170,7 @@ if __name__=='__main__':
     if args.flip:
         rotate_options = [Image.ROTATE_180]
     elif args.none or args.horizontal or args.vertical:
-        rotate_options = [None]
+        rotate_options = []
     else:
         rotate_options =[None, Image.ROTATE_90, Image.ROTATE_180,
             Image.ROTATE_270]
@@ -199,8 +199,10 @@ if __name__=='__main__':
     frames = []
     for box_size in box_sizes:
         im = ImageManipulator(full_name + ext)
-        im.rotate_sections(box_size, rotate_options)
-        if args.random: im.randomize_sections(box_size, ext[1:])
+        if len(rotate_options) > 0:
+            im.rotate_sections(box_size, rotate_options)
+        if args.random:
+            im.randomize_sections(box_size, ext[1:])
         if args.frames or len(box_sizes) == 1:
             im.save('{}{}-{:03d}{}'.format(output, base_name, box_size, ext))
         frames.append(im.copy())
