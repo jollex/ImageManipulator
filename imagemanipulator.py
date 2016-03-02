@@ -28,7 +28,7 @@ class ImageManipulator(object):
                 region = self.image.crop(box)
                 region = region.transpose(rotate)
                 self.image.paste(region, box)
-                log("Rotate box {}".format(box))
+                log("Rotated box {}".format(box))
 
         self.image = self.image.crop((0, 0, new_w, new_h))
 
@@ -89,6 +89,7 @@ class ImageManipulator(object):
             for i in range(n_rows):
                 box = (0, i * box_size, w, (i + 1) * box_size)
                 boxes.append(box)
+
             return boxes, w, box_size * n_rows
         else:
             for i in range(n_rows):
@@ -188,9 +189,11 @@ if __name__=='__main__':
         image = Image.open(full_name + ext)
         size = image.size
         image.close()
+
         if args.vertical: min_size = size[0]
         elif args.horizontal: min_size = size[1]
         else: min_size = min(size)
+
         while box_size * 2 <= min_size:
             box_sizes.append(box_size)
             box_size *= 2
