@@ -66,6 +66,41 @@ class ImageManipulator(object):
 
         self.image = self.image.crop((0, 0, new_w, new_h))
 
+    def average_sections(self, box_size):
+        """
+        Gets the sections of the image, turn each section into an average of all
+        the pixels in the section.
+        """
+        boxes, new_w, new_h = self.get_boxes_and_new_size(box_size)
+
+        for box in boxes:
+            self.average_box(box)
+            log("Averaged box {}".format(box))
+
+        self.image = self.image.crop((0, 0, new_w, new_h))
+
+    def average_box(self, box):
+        """
+        Averages one box.
+        """
+        region = self.image.crop(box)
+        w, h = region.size
+        pixels = region.load()
+
+        rs, gs, bs = [], [], []
+        for x in range(w):
+            for y in range(h):
+                pixel = pixels[x, y]
+                rs.append(pixel[0])
+                gs.append(pixel[1])
+                bs.append(pixel[2])
+
+        r = sum(rs) / len(rs)
+        g = sum(gs) / len(gs)
+        b = sum(bs) / len(bs)
+
+        self.image.paste(Image.new('RGB', (w, h), (r, g, b)), box)
+
     def get_boxes_and_new_size(self, box_size):
         """
         Returns the bounding boxes for as many sections of the image as possible
@@ -146,6 +181,8 @@ if __name__=='__main__':
         of 90 degrees')
     parser.add_argument('-r', '--random', action='store_true', help='Use flag\
         to randomize position of boxes')
+    parser.add_argument('-a', '--average', action='store_true', help='Use flag\
+        to turn each box into the average of its pixels')
     parser.add_argument('--frames', action='store_true', help='Use flag to save\
         each frame along with the gif')
     parser.add_argument('--nogif', action='store_true', help='Use flag to not\
@@ -204,12 +241,15 @@ if __name__=='__main__':
         im = ImageManipulator(full_name + ext)
         if len(rotate_options) > 0:
             im.rotate_sections(box_size, rotate_options)
+        if args.average:
+            im.average_sections(box_size)
         if args.random:
             im.randomize_sections(box_size, ext[1:])
         if args.frames or len(box_sizes) == 1:
-            im.save('{}{}-{:03d}{}'.format(output, base_name, box_size, ext))
+            im.save('{}{}-{:04d}{}'.format(output, base_name, box_size, ext))
         frames.append(im.copy())
-    if args.random: frames.append(Image.open(full_name + ext))
+    if args.random and not args.average:
+        frames.append(Image.open(full_name + ext))
 
     # Crop all frames to size of smallest frame
     min_w = min(map(lambda frame: frame.size[0], frames))
@@ -219,6 +259,6 @@ if __name__=='__main__':
     # Loop the animation and save it
     middle_frames = frames[1:-1]
     middle_frames.reverse()
-    if not args.nogif or len(box_sizes) == 1:
+    if not (args.nogif or len(box_sizes) == 1):
         images2gif.writeGif("{}{}{}.gif".format(output, base_name,
             "-random" if args.random else ""), frames + middle_frames)
