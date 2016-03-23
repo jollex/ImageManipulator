@@ -8,41 +8,145 @@ import images2gif
 IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.bmp']
 
 class ImageManipulator(object):
-    """ Class for manipulating an Image """
-    def __init__(self, image_path):
+    """
+    Class for manipulating an Image. It is created using the path to an image
+    file, a box_size, and an arguments object containging configuration
+    information that is used to interpret the box size. For example, if the
+    horizontal or vertical options are selected, then the boxes are done as
+    slices across the image, instead of square boxes.
+     """
+    def __init__(self, image_path, box_size, args):
+        """
+        :param image_path: The path to the image file.
+        :param box_size: The size of a box. This is used to split the image into
+        boxes and manipulate them.
+        :param args: The args object containing configuration values.
+        """
         self.image = Image.open(image_path)
+        self.boxes, self.new_w, self.new_h = self.get_boxes_and_size(box_size)
+        self.args = args
+        self.ext = os.path.splitext(image_path)[1][1:]
 
-    def rotate_sections(self, box_size, rotate_options):
+    def get_boxes_and_size(self, box_size):
+        """
+        Returns the bounding boxes for as many sections of the image as possible
+        using box_size as the length of each side of the box, along with the new
+        height and width of the image.
+
+        :param box_size: The length of each side of each box
+        :return: A tuple (boxes, new_w, new_h); where boxes is a list of tuples
+        (left, up, right, down) where each direction is the position of that
+        side of the box, and new_w and new_h are the new dimensions of the
+        image.
+        """
+        if box_size == 0:
+            w, h = self.image.size
+            return [(0, 0, w, h)], w, h
+        if args.vertical:
+            return self.get_vertical_boxes_and_size(box_size)
+        elif args.horizontal:
+            return self.get_horizontal_boxes_and_size(box_size)
+        else:
+            return self.get_square_boxes_and_size(box_size)
+
+    def get_vertical_boxes_and_size(self, box_size):
+        """
+        Returns vertical slices of width box_size, along with the new
+        dimensions of the image.
+
+        :param box_size: The width of one vertical slice.
+        :return: A tuple (boxes, new_w, new_h); where boxes is a list of tuples
+        (left, up, right, down) where each direction is the position of that
+        side of the box, and new_w and new_h are the new dimensions of the
+        image.
+        """
+        w, h = self.image.size
+        n_cols = w / box_size
+        boxes = []
+        for i in range(n_cols):
+            box = (i * box_size, 0, (i + 1) * box_size, h)
+            boxes.append(box)
+        return boxes, box_size * n_cols, h
+
+    def get_horizontal_boxes_and_size(self, box_size):
+        """
+        Returns horizontal slices of height box_size, along with the new
+        dimensions of the image.
+
+        :param box_size: The height of one horizontal slice.
+        :return: A tuple (boxes, new_w, new_h); where boxes is a list of tuples
+        (left, up, right, down) where each direction is the position of that
+        side of the box, and new_w and new_h are the new dimensions of the
+        image.
+        """
+        w, h = self.image.size
+        n_rows = h / box_size
+        boxes = []
+        for i in range(n_rows):
+            box = (0, i * box_size, w, (i + 1) * box_size)
+            boxes.append(box)
+        return boxes, w, box_size * n_rows
+
+    def get_square_boxes_and_size(self, box_size):
+        """
+        Returns square boxes of side length box_size, along with the new
+        dimensions of the image.
+
+        :param box_size: The side length of a box
+        :return: A tuple (boxes, new_w, new_h); where boxes is a list of tuples
+        (left, up, right, down) where each direction is the position of that
+        side of the box, and new_w and new_h are the new dimensions of the
+        image.
+        """
+        w, h = self.image.size
+        n_rows = h / box_size
+        n_cols = w / box_size
+        boxes = []
+        for i in range(n_rows):
+            for j in range(n_cols):
+                box = (j * box_size, i * box_size, (j + 1) * box_size,
+                       (i + 1) * box_size)
+                boxes.append(box)
+
+        return boxes, box_size * n_cols, box_size * n_rows
+
+    def rotate_sections(self, rotate_options):
         """
         Cuts the image into sections of side length box_size and rotates each
         one using a randomly selected rotation from rotate_options.
 
-        box_size -- The length of each side of each box.
-        rotate_options -- A list of length at least one where each member are
-        is one of: None, Image.ROTATE_90, Image.ROTATE_180, or Image.ROTATE_270
+        :param rotate_options: A non-empty list of RotateOptions. A RotateOption
+        is one of None, Image.ROTATE_90, Image.ROTATE_180, or Image.ROTATE_270.
         """
         n_options = len(rotate_options)
 
-        boxes, new_w, new_h = self.get_boxes_and_new_size(box_size)
-        for box in boxes:
-            rotate = rotate_options[random.randint(0, n_options - 1)] if n_options > 1 else rotate_options[0]
-            if rotate:
-                region = self.image.crop(box)
-                region = region.transpose(rotate)
-                self.image.paste(region, box)
-                log("Rotated box {}".format(box))
+        if n_options == 1:
+            for box in self.boxes:
+                self.rotate_box(box, rotate_options[0])
+        else:
+            for box in self.boxes:
+                rotate_option = rotate_options[random.randint(0, n_options - 1)]
+                self.rotate_box(box, rotate_option)
 
-        self.image = self.image.crop((0, 0, new_w, new_h))
+    def rotate_box(self, box, rotate_option):
+        """
+        Rotates the given box using the given RotateOption.
 
-    def randomize_sections(self, box_size, ext):
+        :param box: The box to be rotate.
+        :param rotate_option: The RotateOption
+        """
+        if rotate_option is not None:
+            region = self.image.crop(box)
+            region = region.transpose(rotate_option)
+            self.image.paste(region, box)
+            self.log("Rotated box {}".format(box))
+
+    def randomize_sections(self):
         """
         Cuts the image into sections of side length box_size and randomly
         switches pairs of sections.
-
-        box_size -- The length of each side of each box.
-        ext -- The extension of the image
         """
-        boxes, new_w, new_h = self.get_boxes_and_new_size(box_size)
+        boxes = list(self.boxes)
         random.shuffle(boxes)
 
         pairs = []
@@ -50,40 +154,44 @@ class ImageManipulator(object):
             try: pairs.append((boxes[i], boxes[i + 1]))
             except IndexError: pass
 
-        for pair in pairs:
-            first_box, second_box = pair
+        for first_box, second_box in pairs:
+            self.swap_boxes(first_box, second_box, self.ext)
 
-            first_region_bytes = io.BytesIO()
-            self.image.crop(first_box).save(first_region_bytes, format=ext)
-            first_region = Image.open(first_region_bytes)
-
-            second_region_bytes = io.BytesIO()
-            self.image.crop(second_box).save(second_region_bytes, format=ext)
-            second_region = Image.open(second_region_bytes)
-
-            self.image.paste(first_region, second_box)
-            self.image.paste(second_region, first_box)
-
-            log("Switched boxes {}".format(pair))
-
-        self.image = self.image.crop((0, 0, new_w, new_h))
-
-    def average_sections(self, box_size):
+    def swap_boxes(self, first_box, second_box, ext):
         """
-        Gets the sections of the image, turn each section into an average of all
-        the pixels in the section.
-        """
-        boxes, new_w, new_h = self.get_boxes_and_new_size(box_size)
+        Swaps the two boxes on the image.
 
-        for box in boxes:
+        :param first_box: The first box to swap.
+        :param second_box: The other box to swap with the first.
+        :param ext: The extension of the image file, needed to save the images
+        bytes.
+        """
+        first_region_bytes = io.BytesIO()
+        self.image.crop(first_box).save(first_region_bytes, format=ext)
+        first_region = Image.open(first_region_bytes)
+
+        second_region_bytes = io.BytesIO()
+        self.image.crop(second_box).save(second_region_bytes, format=ext)
+        second_region = Image.open(second_region_bytes)
+
+        self.image.paste(first_region, second_box)
+        self.image.paste(second_region, first_box)
+
+        self.log("Swapped boxes {}".format((first_box, second_box)))
+
+    def average_sections(self):
+        """
+        Turns each box into an average of all the pixels in the box.
+        """
+        for box in self.boxes:
             self.average_box(box)
-            log("Averaged box {}".format(box))
-
-        self.image = self.image.crop((0, 0, new_w, new_h))
+            self.log("Averaged box {}".format(box))
 
     def average_box(self, box):
         """
         Averages one box.
+
+        :param box: The box to average.
         """
         region = self.image.crop(box)
         w, h = region.size
@@ -103,70 +211,39 @@ class ImageManipulator(object):
 
         self.image.paste(Image.new('RGB', (w, h), (r, g, b)), box)
 
-    def get_boxes_and_new_size(self, box_size):
+    def crop_image(self):
         """
-        Returns the bounding boxes for as many sections of the image as possible
-        using box_size as the length of each side of the box, along with the new
-        height and width of the image.
-
-        box_size -- The length of each side of each box.
+        Effect: crops the image to the new dimenstions returned when calculating
+        the boxes.
         """
-        w, h = self.image.size
+        self.image = self.image.crop((0, 0, self.new_w, self.new_h))
 
-        if box_size == 0:
-            return [(0, 0, w, h)], w, h
-        else:
-            n_cols = w / box_size
-            n_rows = h / box_size
-
-            boxes = []
-            if args.vertical:
-                for i in range(n_cols):
-                    box = (i * box_size, 0, (i + 1) * box_size, h)
-                    boxes.append(box)
-
-                return boxes, box_size * n_cols, h
-            elif args.horizontal:
-                for i in range(n_rows):
-                    box = (0, i * box_size, w, (i + 1) * box_size)
-                    boxes.append(box)
-
-                return boxes, w, box_size * n_rows
-            else:
-                for i in range(n_rows):
-                    for j in range(n_cols):
-                        box = (j * box_size, i * box_size,
-                               (j + 1) * box_size, (i + 1) * box_size)
-                        boxes.append(box)
-
-                return boxes, box_size * n_cols, box_size * n_rows
+    def copy(self):
+        """ :return: A copy of the current Image. """
+        return self.image.copy()
 
     def save(self, save_path):
         """
-        Saves the image
+        Saves the current image.
 
-        save_path -- The file name for the image
+        :param save_path: The file path to save the image to.
         """
         self.image.save(save_path)
 
-    def copy(self):
-        """ Returns a copy of the image """
-        return self.image.copy()
-
     def close(self):
-        """ Close the image """
+        """ Effect: closes the Image. """
         self.image.close()
 
-def log(message):
-    """
-    Simple logging method
+    def log(self, message):
+        """
+        Simply prints message to STDOUT if debugging is enabled.
 
-    message -- The message to be logged
-    """
-    if DEBUG:
-        print message
+        :param message: The message to be logged.
+        """
+        if self.args.debug:
+            print message
 
-def perform_operations(image_path):
+def manipulate_image(image_path, args):
     """
     Performs all image operations on the given image file
 
@@ -177,55 +254,27 @@ def perform_operations(image_path):
     if ext.lower() == '.jpg':
         os.rename(full_name + ext, full_name + '.jpeg')
         ext = '.jpeg'
+
     if args.output and os.path.exists(args.output):
         output = args.output
     else:
         output = os.path.dirname(full_name + ext) + '/'
 
-    if args.flip:
-        rotate_options = [Image.ROTATE_180]
-    elif args.none or args.horizontal or args.vertical:
-        rotate_options = []
-    else:
-        rotate_options = [None, Image.ROTATE_90, Image.ROTATE_180,
-            Image.ROTATE_270]
-
-    box_size = args.box_size
-    box_sizes = []
-
-    # Populate list of box_sizes
-    iterations = args.iterations
-    if iterations:
-        for i in range(iterations):
-            box_sizes.append(box_size)
-            box_size *= 2 # the most important line
-    else:
-        image = Image.open(full_name + ext)
-        size = image.size
-        image.close()
-
-        if args.vertical: max_size = size[0]
-        elif args.horizontal: max_size = size[1]
-        else: max_size = min(size)
-
-        while box_size * 2 <= max_size:
-            box_sizes.append(box_size)
-            box_size *= 2 # also the most important line
-
+    box_sizes = get_box_sizes(args.box_size, args.iterations, full_name + ext, args)
     frames = []
     for box_size in box_sizes:
-        im = ImageManipulator(full_name + ext)
-        if len(rotate_options) > 0:
-            im.rotate_sections(box_size, rotate_options)
+        im = ImageManipulator(full_name + ext, box_size, args)
+        rotate_options = get_rotate_options(args)
+        if len(rotate_options) != 0:
+            im.rotate_sections(rotate_options)
         if args.average:
-            im.average_sections(box_size)
+            im.average_sections()
         if args.random:
-            im.randomize_sections(box_size, ext[1:])
+            im.randomize_sections()
+        im.crop_image()
         if args.frames or len(box_sizes) == 1:
             im.save('{}{}-{:04d}{}'.format(output, base_name, box_size, ext))
         frames.append(im.copy())
-    if args.random and not args.average:
-        frames.append(Image.open(full_name + ext))
 
     # Crop all frames to size of smallest frame
     min_w = min(map(lambda frame: frame.size[0], frames))
@@ -239,25 +288,75 @@ def perform_operations(image_path):
         images2gif.writeGif("{}{}{}.gif".format(output, base_name,
             "-random" if args.random else ""), frames + middle_frames)
 
+def get_box_sizes(initial_box_size, iterations, image_path, args):
+    """
+    Creates a list of integers, where each integer is the box size for the
+    manipulations of the image for that frame. This is done by taking a starting
+    box size and multiplying it by two every iteration. If the auto flag is
+    given the iterations will continue until they are at half the size of one
+    of the sides of the image.
+
+    :param initial_box_size: The beginning box_size.
+    :param iterations: The number of iterations.
+    :param image_path: The path to the image.
+    :param args: The args object used for configuration.
+
+    :return: A list of integers.
+    """
+    box_sizes = []
+    box_size = 1 if args.auto else initial_box_size
+    if args.auto:
+        image = Image.open(full_name + ext)
+        size = image.size
+        image.close()
+
+        if args.vertical: max_size = size[0]
+        elif args.horizontal: max_size = size[1]
+        else: max_size = min(size)
+
+        while box_size * 2 <= max_size:
+            box_sizes.append(box_size)
+            box_size *= 2 # also the most important line
+    else:
+        for i in range(iterations):
+            box_sizes.append(box_size)
+            box_size *= 2 # the most important line
+    return box_sizes
+
+def get_rotate_options(args):
+    """
+    Gets the rotate options for the Image depending on the arguments.
+    :param args: The args object used for configuration.
+    :return: A list of RotateOptions. A RotateOption is one of None,
+    Image.ROTATE_90, Image.ROTATE_180, or Image.ROTATE_270.
+    """
+    if args.flip:
+        return [Image.ROTATE_180]
+    elif args.ninety:
+        return [None, Image.ROTATE_90, Image.ROTATE_180, Image.ROTATE_270]
+    else:
+        return []
+
 if __name__=='__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('image_path', default='', type=str, help='Path to the\
         image to manipulate')
-    parser.add_argument('-bs', '--box_size', default=1, type=int, help='The\
+    parser.add_argument('-bs', '--box_size', default=0, type=int, help='The\
         size of the boxes the first frame will be split into')
-    parser.add_argument('-i', '--iterations', default=None, type=int, help='The\
+    parser.add_argument('-i', '--iterations', default=1, type=int, help='The\
         number of times to run the manipulator, multiplying box_size by 2 for\
         each iteration')
+    parser.add_argument('--auto', action='store_true', help='Use flag to auto\
+        create animations going from smallest box size to largest.')
     parser.add_argument('-v', '--vertical', action='store_true', help='Use flag\
         to use vertical strips instead of square boxes.')
     parser.add_argument('-ho', '--horizontal', action='store_true', help='Use\
         flag to use horizontal strips instead of square boxes.')
-    parser.add_argument('-n', '--none', action='store_true', help='Use flag to\
-        not rotate boxes.')
     parser.add_argument('-f', '--flip', action='store_true', help='Use flag to\
-        flip each section instead of randomly rotating each section a multiple\
-        of 90 degrees')
+        flip each box')
+    parser.add_argument('-n', '--ninety', action='store_true', help='Use flag\
+        to rotate each box a random multiple of ninety degrees')
     parser.add_argument('-r', '--random', action='store_true', help='Use flag\
         to randomize position of boxes')
     parser.add_argument('-a', '--average', action='store_true', help='Use flag\
@@ -274,13 +373,11 @@ if __name__=='__main__':
         print debugging statements while the script runs')
     args = parser.parse_args()
 
-    DEBUG = args.debug
-
     if args.directory:
         for dirpath, dirnames, filenames in os.walk(args.directory):
             for name in filenames:
                 _, ext = os.path.splitext(name)
                 if ext in IMAGE_EXTENSIONS:
-                    perform_operations(os.path.join(dirpath, name))
+                    manipulate_image(os.path.join(dirpath, name), args)
     else:
-        perform_operations(args.image_path)
+        manipulate_image(args.image_path, args)
