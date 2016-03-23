@@ -5,6 +5,8 @@ from shutil import copyfile
 from PIL import Image
 import images2gif
 
+IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.bmp']
+
 class ImageManipulator(object):
     """ Class for manipulating an Image """
     def __init__(self, image_path):
@@ -110,30 +112,34 @@ class ImageManipulator(object):
         box_size -- The length of each side of each box.
         """
         w, h = self.image.size
-        n_cols = w / box_size
-        n_rows = h / box_size
 
-        boxes = []
-        if args.vertical:
-            for i in range(n_cols):
-                box = (i * box_size, 0, (i + 1) * box_size, h)
-                boxes.append(box)
-
-            return boxes, box_size * n_cols, h
-        elif args.horizontal:
-            for i in range(n_rows):
-                box = (0, i * box_size, w, (i + 1) * box_size)
-                boxes.append(box)
-
-            return boxes, w, box_size * n_rows
+        if box_size == 0:
+            return [(0, 0, w, h)], w, h
         else:
-            for i in range(n_rows):
-                for j in range(n_cols):
-                    box = (j * box_size, i * box_size,
-                           (j + 1) * box_size, (i + 1) * box_size)
+            n_cols = w / box_size
+            n_rows = h / box_size
+
+            boxes = []
+            if args.vertical:
+                for i in range(n_cols):
+                    box = (i * box_size, 0, (i + 1) * box_size, h)
                     boxes.append(box)
 
-            return boxes, box_size * n_cols, box_size * n_rows
+                return boxes, box_size * n_cols, h
+            elif args.horizontal:
+                for i in range(n_rows):
+                    box = (0, i * box_size, w, (i + 1) * box_size)
+                    boxes.append(box)
+
+                return boxes, w, box_size * n_rows
+            else:
+                for i in range(n_rows):
+                    for j in range(n_cols):
+                        box = (j * box_size, i * box_size,
+                               (j + 1) * box_size, (i + 1) * box_size)
+                        boxes.append(box)
+
+                return boxes, box_size * n_cols, box_size * n_rows
 
     def save(self, save_path):
         """
@@ -160,47 +166,18 @@ def log(message):
     if DEBUG:
         print message
 
-if __name__=='__main__':
-    # Parse arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('image_path', type=str, help='Path to the image to\
-        manipulate')
-    parser.add_argument('-bs', '--box_size', default=1, type=int, help='The\
-        size of the boxes the first frame will be split into')
-    parser.add_argument('-i', '--iterations', default=None, type=int, help='The\
-        number of times to run the manipulator, multiplying box_size by 2 for\
-        each iteration')
-    parser.add_argument('-v', '--vertical', action='store_true', help='Use flag\
-        to use vertical strips instead of square boxes.')
-    parser.add_argument('-ho', '--horizontal', action='store_true', help='Use\
-        flag to use horizontal strips instead of square boxes.')
-    parser.add_argument('-n', '--none', action='store_true', help='Use flag to\
-        not rotate boxes.')
-    parser.add_argument('-f', '--flip', action='store_true', help='Use flag to\
-        flip each section instead of randomly rotating each section a multiple\
-        of 90 degrees')
-    parser.add_argument('-r', '--random', action='store_true', help='Use flag\
-        to randomize position of boxes')
-    parser.add_argument('-a', '--average', action='store_true', help='Use flag\
-        to turn each box into the average of its pixels')
-    parser.add_argument('--frames', action='store_true', help='Use flag to save\
-        each frame along with the gif')
-    parser.add_argument('--nogif', action='store_true', help='Use flag to not\
-        create a gif with the resulting frames.')
-    parser.add_argument('-o', '--output', default='', type=str, help="Path to\
-        directory to save gif and/or frames in.")
-    parser.add_argument('-d', '--debug', action='store_true', help='Use flag to\
-        print debugging statements while the script runs')
-    args = parser.parse_args()
+def perform_operations(image_path):
+    """
+    Performs all image operations on the given image file
 
-    DEBUG = args.debug
-
-    full_name, _ = os.path.splitext(args.image_path)
-    base_name, ext = os.path.splitext(os.path.basename(args.image_path))
+    :param image_path: path to the image file to edit
+    """
+    full_name, _ = os.path.splitext(image_path)
+    base_name, ext = os.path.splitext(os.path.basename(image_path))
     if ext.lower() == '.jpg':
-        copyfile(full_name + ext, full_name + '.jpeg')
+        os.rename(full_name + ext, full_name + '.jpeg')
         ext = '.jpeg'
-    if os.path.exists(args.output):
+    if args.output and os.path.exists(args.output):
         output = args.output
     else:
         output = os.path.dirname(full_name + ext) + '/'
@@ -210,7 +187,7 @@ if __name__=='__main__':
     elif args.none or args.horizontal or args.vertical:
         rotate_options = []
     else:
-        rotate_options =[None, Image.ROTATE_90, Image.ROTATE_180,
+        rotate_options = [None, Image.ROTATE_90, Image.ROTATE_180,
             Image.ROTATE_270]
 
     box_size = args.box_size
@@ -221,21 +198,20 @@ if __name__=='__main__':
     if iterations:
         for i in range(iterations):
             box_sizes.append(box_size)
-            box_size *= 2
+            box_size *= 2 # the most important line
     else:
         image = Image.open(full_name + ext)
         size = image.size
         image.close()
 
-        if args.vertical: min_size = size[0]
-        elif args.horizontal: min_size = size[1]
-        else: min_size = min(size)
+        if args.vertical: max_size = size[0]
+        elif args.horizontal: max_size = size[1]
+        else: max_size = min(size)
 
-        while box_size * 2 <= min_size:
+        while box_size * 2 <= max_size:
             box_sizes.append(box_size)
-            box_size *= 2
+            box_size *= 2 # also the most important line
 
-    # Create frames
     frames = []
     for box_size in box_sizes:
         im = ImageManipulator(full_name + ext)
@@ -262,3 +238,49 @@ if __name__=='__main__':
     if not (args.nogif or len(box_sizes) == 1):
         images2gif.writeGif("{}{}{}.gif".format(output, base_name,
             "-random" if args.random else ""), frames + middle_frames)
+
+if __name__=='__main__':
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('image_path', default='', type=str, help='Path to the\
+        image to manipulate')
+    parser.add_argument('-bs', '--box_size', default=1, type=int, help='The\
+        size of the boxes the first frame will be split into')
+    parser.add_argument('-i', '--iterations', default=None, type=int, help='The\
+        number of times to run the manipulator, multiplying box_size by 2 for\
+        each iteration')
+    parser.add_argument('-v', '--vertical', action='store_true', help='Use flag\
+        to use vertical strips instead of square boxes.')
+    parser.add_argument('-ho', '--horizontal', action='store_true', help='Use\
+        flag to use horizontal strips instead of square boxes.')
+    parser.add_argument('-n', '--none', action='store_true', help='Use flag to\
+        not rotate boxes.')
+    parser.add_argument('-f', '--flip', action='store_true', help='Use flag to\
+        flip each section instead of randomly rotating each section a multiple\
+        of 90 degrees')
+    parser.add_argument('-r', '--random', action='store_true', help='Use flag\
+        to randomize position of boxes')
+    parser.add_argument('-a', '--average', action='store_true', help='Use flag\
+        to turn each box into the average of its pixels')
+    parser.add_argument('--frames', action='store_true', help='Use flag to save\
+        each frame along with the gif')
+    parser.add_argument('--nogif', action='store_true', help='Use flag to not\
+        create a gif with the resulting frames.')
+    parser.add_argument('-o', '--output', default='', type=str, help="Path to\
+        directory to save gif and/or frames in.")
+    parser.add_argument('--directory', default='', type=str, help="Directory\
+        containing image files to do operations on, recursive.")
+    parser.add_argument('-d', '--debug', action='store_true', help='Use flag to\
+        print debugging statements while the script runs')
+    args = parser.parse_args()
+
+    DEBUG = args.debug
+
+    if args.directory:
+        for dirpath, dirnames, filenames in os.walk(args.directory):
+            for name in filenames:
+                _, ext = os.path.splitext(name)
+                if ext in IMAGE_EXTENSIONS:
+                    perform_operations(os.path.join(dirpath, name))
+    else:
+        perform_operations(args.image_path)
