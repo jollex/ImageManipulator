@@ -5,10 +5,11 @@ In the process of migrating this to a web application.
 ```
 Web Browser                  Server                    Script
    |                           |                         |
+   | ----- Request to / -----> |                         |
+Start page <--- HTML --------- |                         |
    |                           |                         |
-Start page <--- HTML ---- Request to /                   |
-   |                           |                         |
-Button press --------> Request to /compute               |
+Button press ----------------> |                         |
+   |                   Request to /compute               |
    |                  with options parameter             |
    |                           |                         |
    |                  Calls script with CLI              |
