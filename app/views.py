@@ -32,7 +32,8 @@ def manipulate_image(file_path, form):
     :param file_path: Path to the saved image
     :param form: The submitted form with configuration options
 
-    :return: gif, images; where gif is the path to a created gif
+    :return: (gif, images); where gif is the path to a created gif or the empty
+    string if there is none, and images is a list of paths to resulting images
     """
     return '', []
 
@@ -41,5 +42,8 @@ def get_cli_arguments(form):
     Given a submitted form with configuration options for the image
     manipulation, determines which command line arugments must be given to the
     script to achieve the configuration.
+
+    :return: A list of arguments to be provided to the command line interface
+    for the image manipulation script.
     """
-    return []
+    return ['--output', app.config['OUTPUT_FOLDER']]
