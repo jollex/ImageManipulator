@@ -1,3 +1,6 @@
 .DS_Store
 *.pyc
 populate-examples.sh
+uploads/*
+app/output/*
+flask/
