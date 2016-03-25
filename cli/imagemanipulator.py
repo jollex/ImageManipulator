@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import argparse, sys, os, random, io
+import argparse, sys, os, random, io, json
 from shutil import copyfile
 from PIL import Image
 import images2gif
@@ -261,7 +261,7 @@ def manipulate_image(image_path, args):
         output = os.path.dirname(full_name + ext) + '/'
 
     box_sizes = get_box_sizes(args.box_size, args.iterations, full_name + ext, args)
-    frames = []
+    frames, frame_paths = [], []
     for box_size in box_sizes:
         im = ImageManipulator(full_name + ext, box_size, args)
         rotate_options = get_rotate_options(args)
@@ -273,7 +273,9 @@ def manipulate_image(image_path, args):
             im.randomize_sections()
         im.crop_image()
         if args.frames or len(box_sizes) == 1:
-            im.save('{}{}-{:04d}{}'.format(output, base_name, box_size, ext))
+            base_path = '{}-{:04d}{}'.format(base_name, box_size, ext)
+            im.save(output + base_path)
+            frame_paths.append(base_path)
         frames.append(im.copy())
 
     # Crop all frames to size of smallest frame
@@ -285,8 +287,13 @@ def manipulate_image(image_path, args):
     middle_frames = frames[1:-1]
     middle_frames.reverse()
     if not (args.nogif or len(box_sizes) == 1):
-        images2gif.writeGif("{}{}{}.gif".format(output, base_name,
-            "-random" if args.random else ""), frames + middle_frames)
+        base_path = base_name + ".gif"
+        images2gif.writeGif(output + base_path, frames + middle_frames)
+        gif_path = "{}.gif".format(base_name)
+    else:
+        gif_path =  ''
+    print json.dumps(gif_path)
+    print json.dumps(frame_paths)
 
 def get_box_sizes(initial_box_size, iterations, image_path, args):
     """
@@ -306,7 +313,7 @@ def get_box_sizes(initial_box_size, iterations, image_path, args):
     box_sizes = []
     box_size = 1 if args.auto else initial_box_size
     if args.auto:
-        image = Image.open(full_name + ext)
+        image = Image.open(image_path)
         size = image.size
         image.close()
 

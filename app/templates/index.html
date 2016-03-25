@@ -14,6 +14,8 @@
         <br><br>
         Number of frames: {{ form.frames }}
         <br><br>
+        {{ form.save_frames }} Save frames
+        <br><br>
         {% for option in form.box_shape %}
             {{ option }} {{ option.label }}
         {% endfor %}

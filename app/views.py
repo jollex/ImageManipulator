@@ -1,8 +1,10 @@
-import os
+import os, subprocess, json
 from flask import render_template, send_from_directory
 from app import app
 from .forms import ImageManipulationForm
 from werkzeug import secure_filename
+
+ROOT_DIR = os.path.dirname(__file__)
 
 @app.route('/', methods=['GET', 'POST'])
 def start():
@@ -20,8 +22,7 @@ def start():
 
 @app.route('/output/<path:filename>')
 def send_file(filename):
-    root_dir = os.path.dirname(__file__)
-    return send_from_directory(os.path.join(root_dir,
+    return send_from_directory(os.path.join(ROOT_DIR,
         app.config['OUTPUT_FOLDER']), filename)
 
 def manipulate_image(file_path, form):
@@ -35,7 +36,15 @@ def manipulate_image(file_path, form):
     :return: (gif, images); where gif is the path to a created gif or the empty
     string if there is none, and images is a list of paths to resulting images
     """
-    return '', []
+    script_path = app.config['SCRIPT_PATH']
+    output_dir = os.path.join(ROOT_DIR, app.config['OUTPUT_FOLDER'])
+    arguments = ['--output', output_dir] + get_cli_arguments(form)
+    command = ['python', script_path, file_path] + arguments
+    print command
+
+    result = subprocess.check_output(command)
+    result = result.strip().split('\n')
+    return map(json.loads, result)
 
 def get_cli_arguments(form):
     """
@@ -43,7 +52,57 @@ def get_cli_arguments(form):
     manipulation, determines which command line arugments must be given to the
     script to achieve the configuration.
 
+    Animation options:
+    Auto | One Frame | Custom
+    Box size text field
+    Number of frames text field
+    Save frames checkbox
+    If One Frame is selected, show box size text field
+    If Custom is selected, show box size and number of frames sliders
+    If Auto or Custom are selected, show save frames checkbox
+
+    Box shape options:
+    Square | Vertical | Horizontal
+
+    Effects:
+    Rotation drop down menu: [None, Flip, Ninety]; doesn't show
+    Ninety if vertical or horizontal are selected.
+    Randomize boxes checkbox
+    Average boxes checkbox
+
+    :param form: The ImageManipulationForm submitted by the user.
+
     :return: A list of arguments to be provided to the command line interface
     for the image manipulation script.
     """
-    return ['--output', app.config['OUTPUT_FOLDER']]
+    arguments = []
+
+    if form.animation.data == 'auto':
+        arguments += ['--auto']
+    if form.animation.data == 'one_frame':
+        arguments += ['--box_size', form.box_size.data]
+    elif form.animation.data == 'custom':
+        arguments += ['--box_size', form.box_size.data]
+        arguments += ['--iterations', form.frames.data]
+
+    if form.animation.data in ['auto', 'custom']:
+        if form.save_frames:
+            arguments += ['--frames']
+
+    if form.box_shape.data == 'vertical':
+        arguments += ['--vertical']
+    elif form.box_shape.data == 'horizontal':
+        arguments += ['--horizontal']
+
+    if not form.average.data:
+        if form.rotation.data == 'flip':
+            arguments += ['--flip']
+        elif form.rotation.data == 'ninety':
+            arguments += ['--ninety']
+
+    if form.randomize.data:
+        arguments += ['--random']
+    if form.average.data:
+        arguments += ['--average']
+
+    return arguments

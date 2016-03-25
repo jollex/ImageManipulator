@@ -24,29 +24,15 @@ class ImageFileRequired(object):
 class ImageManipulationForm(Form):
     image = FileField('image', validators=[ImageFileRequired()])
 
-    # TODO: Add configuration options.
-
-    # Animation options:
-    # Auto | One Frame | Custom
-    # Box size slider
-    # Number of frames slider
-    # If One Frame is selected, show box size slider field
-    # If Custom is selected, show box size and number of frames sliders
-    animation = RadioField('animation', choices=[('auto', 'Automatic'),
+    animation = RadioField('animation', choices=[('auto', 'GIF'),
         ('one_frame', 'One Frame'), ('custom', 'Custom')])
     box_size = StringField('box_size')
     frames = StringField('frames')
+    save_frames = BooleanField('save_frames')
 
-    # Box shape options:
-    # Square | Vertical | Horizontal
     box_shape = RadioField('box_shape', choices=[('square', 'Square'),
         ('vertical', 'Vertical slices'), ('horizontal', 'Horizontal slices')])
 
-    # Effects:
-    # Rotation drop down menu: [None, Flip, Multiple of 90]; doesn't show
-    # Multiples of 90 if vertical or horizontal are selected.
-    # Randomize boxes checkbox
-    # Average boxes checkbox
     rotation = SelectField('rotation', choices=[('none', 'None'), ('flip', 'Flip'), ('ninety', 'Multiples of 90 degrees')])
     randomize = BooleanField('randomize')
     average = BooleanField('average')
