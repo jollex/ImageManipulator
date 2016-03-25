@@ -1,8 +1,7 @@
-import os, subprocess, json
+import os, subprocess, json, uuid
 from flask import render_template, send_from_directory
 from app import app
 from .forms import ImageManipulationForm
-from werkzeug import secure_filename
 
 ROOT_DIR = os.path.dirname(__file__)
 
@@ -11,7 +10,8 @@ def start():
     form = ImageManipulationForm()
 
     if form.validate_on_submit():
-        filename = secure_filename(form.image.data.filename)
+        _, ext = os.path.splitext(form.image.data.filename)
+        filename = str(uuid.uuid4()) + ext
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         form.image.data.save(file_path)
 
@@ -41,6 +41,9 @@ def manipulate_image(file_path, form):
     arguments = ['--output', output_dir] + get_cli_arguments(form)
     command = ['python', script_path, file_path] + arguments
 
+    # the script outputs the following two lines:
+    # "path_to.gif" or ""
+    # ["path_to_frame.png", ...]
     result = subprocess.check_output(command)
     result = result.strip().split('\n')
     return map(json.loads, result)

@@ -1,14 +1,10 @@
-<html>
-    <head>
-        <title>Result</title>
-    </head>
-    <body>
-        {% if gif %}
-        <img src="{{ url_for('send_file', filename=gif) }}" />
-        {% endif %}
+{% extends "base.html" %}
+{% block content %}
+    {% if gif %}
+    <img src="{{ url_for('send_file', filename=gif) }}" />
+    {% endif %}
 
-        {% for image in images %}
-        <img src="{{ url_for('send_file', filename=image) }}" />
-        {% endfor %}
-    </body>
-</html>
+    {% for image in images %}
+    <img src="{{ url_for('send_file', filename=image) }}" />
+    {% endfor %}
+{% endblock %}
