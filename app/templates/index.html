@@ -1,5 +1,9 @@
-{% block content %}
-    <form action="" method="POST" enctype="multipart/form-data">
+<html>
+    <head>
+        <title>Result</title>
+    </head>
+    <body>
+        <form action="" method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <p>
         Upload your image:<br>
@@ -28,4 +32,5 @@
         <br><br>
         {{ form.submit }}
     </form>
-{% endblock %}
+    </body>
+</html>
