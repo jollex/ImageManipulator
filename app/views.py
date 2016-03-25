@@ -40,7 +40,6 @@ def manipulate_image(file_path, form):
     output_dir = os.path.join(ROOT_DIR, app.config['OUTPUT_FOLDER'])
     arguments = ['--output', output_dir] + get_cli_arguments(form)
     command = ['python', script_path, file_path] + arguments
-    print command
 
     result = subprocess.check_output(command)
     result = result.strip().split('\n')
