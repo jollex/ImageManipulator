@@ -1,10 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
-    {% if gif %}
-    <img src="{{ url_for('send_file', filename=gif) }}" />
-    {% endif %}
-
-    {% for image in images %}
-    <img src="{{ url_for('send_file', filename=image) }}" />
-    {% endfor %}
+    <script>
+        function updateResults(data) {
+            $('#preview').hide();
+            if (data.gif) {
+                gif_img = $('<img src="output/' + data.gif + '" />');
+                gif_img.appendTo('#gif');
+            }
+            for (var i = 0; i < data.frames.length; i++) {
+                frame_img = $('<img src="output/' + data.frames[i] + '" />');
+                frame_img.appendTo('#frames');
+            }
+        }
+        var refreshId = setInterval(function() {
+            $.getJSON('_results/{{ preview_path }}', function(data) {
+                if (!data) {
+                    return;
+                } else {
+                    updateResults(data);
+                    clearInterval(refreshId);
+                }
+            });
+        }, 200);
+    </script>
+    <div id="preview">
+        <img src="{{ url_for('send_upload', filename=preview_path) }}" />
+    </div>
+    <div id="gif"></div>
+    <div id="frames"></div>
 {% endblock %}

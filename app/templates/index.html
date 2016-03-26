@@ -1,32 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-    <form action="" method="POST" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
-        <p>
-        Upload your image:<br>
-        {{ form.image }}<br>
-        </p>
+<form action="" method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <p>
+    Upload your image:<br>
+    {{ form.image }}<br>
+    </p>
 
-        {% for option in form.animation %}
-            {{ option }} {{ option.label }}
-        {% endfor %}
-        <br><br>
-        Box Size: {{ form.box_size }}
-        <br><br>
-        Number of frames: {{ form.frames }}
-        <br><br>
-        {{ form.save_frames }} Save frames
-        <br><br>
-        {% for option in form.box_shape %}
-            {{ option }} {{ option.label }}
-        {% endfor %}
-        <br><br>
-        Rotation options: {{ form.rotation }}
-        <br><br>
-        {{ form.randomize }} Randomize boxes
-        <br><br>
-        {{ form.average }} Average boxes
-        <br><br>
-        {{ form.submit }}
-    </form>
+    {% for option in form.animation %}
+        {{ option }} {{ option.label }}
+    {% endfor %}
+    <br><br>
+    Box Size: {{ form.box_size }}
+    <br><br>
+    Number of frames: {{ form.frames }}
+    <br><br>
+    {{ form.save_frames }} Save frames
+    <br><br>
+    {% for option in form.box_shape %}
+        {{ option }} {{ option.label }}
+    {% endfor %}
+    <br><br>
+    Rotation options: {{ form.rotation }}
+    <br><br>
+    {{ form.randomize }} Randomize boxes
+    <br><br>
+    {{ form.average }} Average boxes
+    <br><br>
+    {{ form.submit }}
+</form>
 {% endblock %}

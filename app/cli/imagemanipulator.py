@@ -23,6 +23,7 @@ class ImageManipulator(object):
         :param args: The args object containing configuration values.
         """
         self.image = Image.open(image_path)
+        self.box_size = box_size
         self.boxes, self.new_w, self.new_h = self.get_boxes_and_size(box_size)
         self.args = args
         self.ext = os.path.splitext(image_path)[1][1:]
@@ -118,6 +119,10 @@ class ImageManipulator(object):
         :param rotate_options: A non-empty list of RotateOptions. A RotateOption
         is one of None, Image.ROTATE_90, Image.ROTATE_180, or Image.ROTATE_270.
         """
+        if (self.box_size == 1
+            and not (self.args.vertical or self.args.horizontal)):
+            return
+
         n_options = len(rotate_options)
 
         if n_options == 1:
@@ -183,6 +188,10 @@ class ImageManipulator(object):
         """
         Turns each box into an average of all the pixels in the box.
         """
+        if (self.box_size == 1
+            and not (self.args.vertical or self.args.horizontal)):
+            return
+
         for box in self.boxes:
             self.average_box(box)
             self.log("Averaged box {}".format(box))
