@@ -15,7 +15,8 @@ class ImageFileRequired(object):
         self.message = message or u'Field must be an image file.'
 
     def __call__(self, form, field):
-        if field.data is None or imghdr.what('unused', field.data.read()) is None:
+        if (field.data is None
+            or imghdr.what('unused', field.data.read()) is None):
             message = self.message or 'An image file is required'
             raise validators.StopValidation(message)
 
