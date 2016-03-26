@@ -1,6 +1,4 @@
 .DS_Store
 *.pyc
-populate-examples.sh
 app/uploads/*
 app/output/*
-env/
