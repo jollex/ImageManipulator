@@ -3,4 +3,4 @@
 populate-examples.sh
 app/uploads/*
 app/output/*
-flask/
+env/
