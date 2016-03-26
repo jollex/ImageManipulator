@@ -2,31 +2,76 @@
 {% block content %}
 <form action="" method="POST" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
-    <p>
-    Upload your image:<br>
-    {{ form.image }}<br>
-    </p>
-
-    {% for option in form.animation %}
+    <div id="image-form"
+        <p>
+        Upload your image:<br>
+        {{ form.image }}<br>
+        </p>
+    </div>
+    <div id="animation-form">
+        {% for option in form.animation %}
+            {{ option }} {{ option.label }}
+        {% endfor %}
+    </div>
+    <div id="box-size-form" style="display: none;">
+        Box Size: {{ form.box_size }}
+    </div>
+    <div id="frames-form" style="display: none;">
+        Number of frames: {{ form.frames }}
+    </div>
+    <div id="save-frames-form">
+        {{ form.save_frames }} Save frames
+    </div>
+    <div id="box-shape-form">
+        {% for option in form.box_shape %}
         {{ option }} {{ option.label }}
-    {% endfor %}
-    <br><br>
-    Box Size: {{ form.box_size }}
-    <br><br>
-    Number of frames: {{ form.frames }}
-    <br><br>
-    {{ form.save_frames }} Save frames
-    <br><br>
-    {% for option in form.box_shape %}
-        {{ option }} {{ option.label }}
-    {% endfor %}
-    <br><br>
-    Rotation options: {{ form.rotation }}
-    <br><br>
-    {{ form.randomize }} Randomize boxes
-    <br><br>
-    {{ form.average }} Average boxes
-    <br><br>
+        {% endfor %}
+    </div>
+    <div id="rotation-form">
+        Rotation options: {{ form.rotation }}
+    </div>
+    <div id="randomize-form">
+        {{ form.randomize }} Randomize boxes
+    </div>
+    <div id="average-form">
+        {{ form.average }} Average boxes
+    </div>
     {{ form.submit }}
 </form>
+<script>
+    $(document).ready(function() {
+        $('#animation-form input:radio').click(function() {
+            var val = $(this).val();
+            if (val == 'auto') {
+                $('#box-size-form').hide();
+                $('#frames-form').hide();
+                $('#save-frames-form').show();
+            } else if (val == 'one_frame') {
+                $('#box-size-form').show();
+                $('#frames-form').hide();
+                $('#save-frames-form').hide();
+            } else {
+                $('#box-size-form').show();
+                $('#frames-form').show();
+                $('#save-frames-form').show();
+            }
+        });
+
+        function updateRotationOptions() {
+            if ($('#average-form input:checkbox').is(':checked')) {
+                $('#rotation > option:nth-child(2)').hide();
+                $('#rotation > option:nth-child(3)').hide();
+            } else if (!($('#box-shape-form input:radio:checked').val()
+                == 'square')) {
+                $('#rotation > option:nth-child(2)').show();
+                $('#rotation > option:nth-child(3)').hide();
+            } else {
+                $('#rotation > option:nth-child(2)').show();
+                $('#rotation > option:nth-child(3)').show();
+            }
+        }
+        $('#box-shape-form input:radio').click(updateRotationOptions);
+        $('#average-form input:checkbox').click(updateRotationOptions);
+    });
+</script>
 {% endblock %}

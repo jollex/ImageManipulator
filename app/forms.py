@@ -26,13 +26,14 @@ class ImageManipulationForm(Form):
     image = FileField('image', validators=[ImageFileRequired()])
 
     animation = RadioField('animation', choices=[('auto', 'GIF'),
-        ('one_frame', 'One Frame'), ('custom', 'Custom')])
+        ('one_frame', 'One Frame'), ('custom', 'Custom')], default='auto')
     box_size = StringField('box_size')
     frames = StringField('frames')
     save_frames = BooleanField('save_frames')
 
     box_shape = RadioField('box_shape', choices=[('square', 'Square'),
-        ('vertical', 'Vertical slices'), ('horizontal', 'Horizontal slices')])
+        ('vertical', 'Vertical slices'), ('horizontal', 'Horizontal slices')],
+        default='square')
 
     rotation = SelectField('rotation', choices=[('none', 'None'), ('flip', 'Flip'), ('ninety', 'Multiples of 90 degrees')])
     randomize = BooleanField('randomize')
