@@ -1,3 +1,3 @@
-#!flask/bin/python
-from app import app
+#!env/bin/python
+from ImageManipulator import app
 app.run(debug=True)

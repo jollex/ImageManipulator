@@ -1,6 +1,6 @@
 import os, sys, subprocess, json, uuid, threading
 from flask import render_template, send_from_directory, url_for, jsonify, request
-from app import app
+from ImageManipulator import app
 from .forms import ImageManipulationForm
 
 ROOT_DIR = os.path.dirname(__file__)
