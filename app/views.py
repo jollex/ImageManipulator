@@ -1,5 +1,5 @@
 import os, sys, subprocess, json, uuid, threading
-from flask import render_template, send_from_directory, url_for, jsonify
+from flask import render_template, send_from_directory, url_for, jsonify, request
 from app import app
 from .forms import ImageManipulationForm
 
