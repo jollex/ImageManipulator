@@ -76,13 +76,11 @@ def manipulate_image(file_path, form, callback):
     arguments = ['--output', output_dir] + get_cli_arguments(form)
     command = [sys.executable, script_path, file_path] + arguments
 
-    print command
     # the script outputs the following two lines:
     # "path_to.gif" or ""
     # ["path_to_frame.png", ...]
     result = subprocess.check_output(command)
     result = result.strip().split('\n')
-    print result
     gif, frames = map(json.loads, result)
     callback(gif, frames)
 

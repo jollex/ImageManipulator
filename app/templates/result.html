@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+    {% if preview_path %}
     <script>
         var refreshId = setInterval(function() {
             $.getJSON('_results/{{ preview_path }}', function(data) {
@@ -31,4 +32,5 @@
     </div>
     <div id="gif"></div>
     <div id="frames"></div>
+    {% endif %}
 {% endblock %}
