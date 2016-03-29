@@ -301,8 +301,9 @@ def manipulate_image(image_path, args):
         gif_path = "{}.gif".format(base_name)
     else:
         gif_path =  ''
-    print json.dumps(gif_path)
-    print json.dumps(frame_paths)
+
+    image_paths = {'gif': gif_path, 'frames': frame_paths}
+    print image_paths
 
 def get_box_sizes(initial_box_size, iterations, image_path, args):
     """
@@ -356,8 +357,8 @@ def get_rotate_options(args):
 if __name__=='__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('image_path', default='', type=str, help='Path to the\
-        image to manipulate')
+    parser.add_argument('image_path', nargs='?', default='', type=str,
+        help='Path to the image to manipulate')
     parser.add_argument('-bs', '--box_size', default=0, type=int, help='The\
         size of the boxes the first frame will be split into')
     parser.add_argument('-i', '--iterations', default=1, type=int, help='The\
@@ -395,5 +396,7 @@ if __name__=='__main__':
                 _, ext = os.path.splitext(name)
                 if ext in IMAGE_EXTENSIONS:
                     manipulate_image(os.path.join(dirpath, name), args)
-    else:
+    elif args.image_path != '':
         manipulate_image(args.image_path, args)
+    else:
+        parser.print_help()

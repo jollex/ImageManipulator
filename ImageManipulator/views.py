@@ -52,24 +52,19 @@ def start_image_processing_and_update_files(file_path, form, filename):
     configuration options.
     :param filename: The base name of the image to manipulate, used as a key.
     """
-    def callback(gif, frames):
-        files[filename] = {'gif': gif, 'frames': frames}
     thread = threading.Thread(target=manipulate_image,
-        args=(file_path, form, callback))
+        args=(file_path, form, filename))
     thread.daemon = True
     thread.start()
 
-def manipulate_image(file_path, form, callback):
+def manipulate_image(file_path, form, filename):
     """
     Given an uploaded image, manipulats the image depending on the options
     provided from the form.
 
     :param file_path: Path to the saved image
     :param form: The submitted form with configuration options
-    :param callback: The callback to execute when done processing the image. Of
-    the form gif, images -> None; where gif is the path to a created gif or the
-    empty string if there is none, and images is a list of paths to resulting
-    images.
+    :param filename: The base name of the image to manipulate, used as a key.
     """
     script_path = os.path.join(ROOT_DIR, app.config['SCRIPT_PATH'])
     output_dir = os.path.join(ROOT_DIR, app.config['OUTPUT_FOLDER'])
@@ -82,7 +77,7 @@ def manipulate_image(file_path, form, callback):
     result = subprocess.check_output(command)
     result = result.strip().split('\n')
     gif, frames = map(json.loads, result)
-    callback(gif, frames)
+    files[filename] = {'gif': gif, 'frames': frames}
 
 def get_cli_arguments(form):
     """
