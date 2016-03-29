@@ -303,7 +303,7 @@ def manipulate_image(image_path, args):
         gif_path =  ''
 
     image_paths = {'gif': gif_path, 'frames': frame_paths}
-    print image_paths
+    print json.dumps(image_paths)
 
 def get_box_sizes(initial_box_size, iterations, image_path, args):
     """

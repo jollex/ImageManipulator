@@ -75,9 +75,7 @@ def manipulate_image(file_path, form, filename):
     # "path_to.gif" or ""
     # ["path_to_frame.png", ...]
     result = subprocess.check_output(command)
-    result = result.strip().split('\n')
-    gif, frames = map(json.loads, result)
-    files[filename] = {'gif': gif, 'frames': frames}
+    files[filename] = json.loads(result)
 
 def get_cli_arguments(form):
     """
