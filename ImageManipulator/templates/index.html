@@ -40,8 +40,8 @@
 </form>
 <script>
     $(document).ready(function() {
-        $('#animation-form input:radio').click(function() {
-            var val = $(this).val();
+        function updateBoxAndFrameOptions() {
+            var val = $('#animation-form input[name=animation]:checked').val();
             if (val == 'auto') {
                 $('#box-size-form').hide();
                 $('#frames-form').hide();
@@ -55,7 +55,9 @@
                 $('#frames-form').show();
                 $('#save-frames-form').show();
             }
-        });
+        }
+        $('#animation-form input:radio').click(updateBoxAndFrameOptions);
+        updateBoxAndFrameOptions();
 
         function updateRotationOptions() {
             if ($('#average-form input:checkbox').is(':checked')) {
@@ -72,6 +74,9 @@
         }
         $('#box-shape-form input:radio').click(updateRotationOptions);
         $('#average-form input:checkbox').click(updateRotationOptions);
+        updateRotationOptions();
+
+
     });
 </script>
 {% endblock %}
