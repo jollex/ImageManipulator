@@ -3,6 +3,7 @@
 ImageManipulator/uploads/*
 ImageManipulator/output/*
 env/
+app.log
 
 # PTVS analysis
 .ptvs/
