@@ -66,10 +66,11 @@ def manipulate_image(file_path, form, filename):
     :param form: The submitted form with configuration options
     :param filename: The base name of the image to manipulate, used as a key.
     """
+    python_executable = os.getenv('VIRTUAL_ENV', sys.executable)
     script_path = os.path.join(ROOT_DIR, app.config['SCRIPT_PATH'])
     output_dir = os.path.join(ROOT_DIR, app.config['OUTPUT_FOLDER'])
     arguments = ['--output', output_dir] + get_cli_arguments(form)
-    command = [sys.executable, script_path, file_path] + arguments
+    command = [python_executable, script_path, file_path] + arguments
 
     # the script outputs the following two lines:
     # "path_to.gif" or ""
