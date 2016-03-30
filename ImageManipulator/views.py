@@ -3,7 +3,6 @@ from flask import render_template, send_from_directory, url_for, jsonify, reques
 from __init__ import app
 from .forms import ImageManipulationForm
 
-ROOT_DIR = os.path.dirname(__file__)
 files = {}
 
 @app.route('/', methods=['GET', 'POST'])
@@ -14,24 +13,13 @@ def start():
         _, ext = os.path.splitext(form.image.data.filename)
         filename = str(uuid.uuid4()) + ext
         files[filename] = False
-        file_path = os.path.join(ROOT_DIR, app.config['UPLOAD_FOLDER'],
-            filename)
+        file_path = os.path.join(app.config['STATIC_DIR'], filename)
         form.image.data.save(file_path)
 
         start_image_processing_and_update_files(file_path, form, filename)
         return render_template('result.html', preview_path=filename)
 
     return render_template('index.html', form=form)
-
-@app.route('/output/<path:filename>', methods=['GET'])
-def send_file(filename):
-    return send_from_directory(os.path.join(ROOT_DIR,
-        app.config['OUTPUT_FOLDER']), filename)
-
-@app.route('/uploads/<path:filename>', methods=['GET'])
-def send_upload(filename):
-    return send_from_directory(os.path.join(ROOT_DIR,
-        app.config['UPLOAD_FOLDER']), filename)
 
 @app.route('/_results/<path:filename>', methods=['GET'])
 def send_results(filename):
@@ -66,11 +54,10 @@ def manipulate_image(file_path, form, filename):
     :param form: The submitted form with configuration options
     :param filename: The base name of the image to manipulate, used as a key.
     """
-    python_executable = os.getenv('VIRTUAL_ENV', sys.executable)
-    script_path = os.path.join(ROOT_DIR, app.config['SCRIPT_PATH'])
-    output_dir = os.path.join(ROOT_DIR, app.config['OUTPUT_FOLDER'])
+    script_path = app.config['SCRIPT_PATH']
+    output_dir = app.config['STATIC_DIR']
     arguments = ['--output', output_dir] + get_cli_arguments(form)
-    command = [python_executable, script_path, file_path] + arguments
+    command = [app.config['PYTHON'], script_path, file_path] + arguments
 
     # the script outputs the following two lines:
     # "path_to.gif" or ""

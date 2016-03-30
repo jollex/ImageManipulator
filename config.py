@@ -1,5 +1,9 @@
+import os
+
 WTF_CSRF_ENABLED = True
 SECRET_KEY = '*3AnUKb%GRGaqC1c7CMR'
-UPLOAD_FOLDER = 'uploads/'
-OUTPUT_FOLDER = 'output/'
-SCRIPT_PATH = 'cli/imagemanipulator.py'
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+APP_DIR = os.path.join(ROOT_DIR, 'ImageManipulator/')
+STATIC_DIR = os.path.join(APP_DIR, 'static/')
+SCRIPT_PATH = os.path.join(APP_DIR, 'cli/imagemanipulator.py')
+PYTHON = os.path.join(ROOT_DIR, 'env/bin/python')

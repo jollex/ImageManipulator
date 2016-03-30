@@ -1,8 +1,8 @@
 .DS_Store
 *.pyc
-ImageManipulator/uploads/*
-ImageManipulator/output/*
 env/
+ImageManipulator/static/*
+!ImageManipulator/static/jquery.js
 app.log
 
 # PTVS analysis

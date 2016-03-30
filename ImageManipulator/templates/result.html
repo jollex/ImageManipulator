@@ -23,12 +23,12 @@
             }
         }
         function getImageWithDownload(fileName, downloadName) {
-            return $('<a href="output/' + fileName + '" download="' +
-                downloadName + '"><img src="output/' + fileName + '" /></a>');
+            return $('<a href="static/' + fileName + '" download="' +
+                downloadName + '"><img src="static/' + fileName + '" /></a>');
         }
     </script>
     <div id="preview">
-        <img src="{{ url_for('send_upload', filename=preview_path) }}" />
+        <img src="static/{{ preview_path }}" />
     </div>
     <div id="gif"></div>
     <div id="frames"></div>
