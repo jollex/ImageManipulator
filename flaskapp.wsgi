@@ -5,3 +5,4 @@ logging.basicConfig(stream=sys.stderr)
 sys.path.insert(0,"/var/www/ImageManipulator/")
 
 from ImageManipulator import app
+app.run()
