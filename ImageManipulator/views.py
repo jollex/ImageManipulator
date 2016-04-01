@@ -10,14 +10,16 @@ def start():
     form = ImageManipulationForm()
 
     if form.validate_on_submit():
-        _, ext = os.path.splitext(form.image.data.filename)
+        original_filename = form.image.data.filename
+        _, ext = os.path.splitext(original_filename)
         filename = str(uuid.uuid4()) + ext
         files[filename] = False
         file_path = os.path.join(app.config['STATIC_DIR'], filename)
         form.image.data.save(file_path)
 
         start_image_processing_and_update_files(file_path, form, filename)
-        return render_template('result.html', preview_path=filename)
+        return render_template('result.html', preview_path=filename,
+            old_path=original_filename)
 
     return render_template('index.html', form=form)
 

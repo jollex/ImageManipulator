@@ -3,23 +3,28 @@
     {% if preview_path %}
     <script>
         var refreshId = setInterval(function() {
-            $.getJSON('_results/{{ preview_path }}', function(data) {
-                if (!data) {
-                    return;
-                } else {
-                    updateResults(data);
-                    clearInterval(refreshId);
-                }
+            $.getJSON("{{ url_for('send_results', filename=preview_path) }}",
+                function(data) {
+                    if (!data) {
+                        return;
+                    } else {
+                        updateResults(data);
+                        clearInterval(refreshId);
+                    }
             });
         }, 200);
         function updateResults(data) {
             $('#preview').hide();
+
+            var old_path = '{{ old_path }}'
+            var name = old_path.substr(0, old_path.lastIndexOf('.'));
+            var ext = old_path.substr(old_path.lastIndexOf('.'));
             if (data.gif) {
-                $('#gif').append(getImageWithDownload(data.gif, "result"));
+                $('#gif').append(getImageWithDownload(data.gif, name + '.gif'));
             }
             for (var i = 0; i < data.frames.length; i++) {
                 $('#frames').append(getImageWithDownload(data.frames[i],
-                    "result" + i.toString()));
+                    name + '-' + i.toString() + ext));
             }
         }
         function getImageWithDownload(fileName, downloadName) {
