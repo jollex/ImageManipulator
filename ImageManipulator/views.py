@@ -10,16 +10,16 @@ def start():
     form = ImageManipulationForm()
 
     if form.validate_on_submit():
-        original_filename = form.image.data.filename
-        _, ext = os.path.splitext(original_filename)
+        old_filename = form.image.data.filename
+        _, ext = os.path.splitext(old_filename)
         filename = str(uuid.uuid4()) + ext
         files[filename] = False
-        file_path = os.path.join(app.config['STATIC_DIR'], filename)
+        file_path = os.path.join(app.config['IMAGE_DIR'], filename)
         form.image.data.save(file_path)
 
         start_image_processing_and_update_files(file_path, form, filename)
-        return render_template('result.html', preview_path=filename,
-            old_path=original_filename)
+        return render_template('result.html', preview_filename=filename,
+            old_filename=old_filename)
 
     return render_template('index.html', form=form)
 
@@ -57,7 +57,7 @@ def manipulate_image(file_path, form, filename):
     :param filename: The base name of the image to manipulate, used as a key.
     """
     script_path = app.config['SCRIPT_PATH']
-    output_dir = app.config['STATIC_DIR']
+    output_dir = app.config['IMAGE_DIR']
     arguments = ['--output', output_dir] + get_cli_arguments(form)
     command = [app.config['PYTHON'], script_path, file_path] + arguments
 

@@ -1,41 +1,42 @@
 {% extends "base.html" %}
 {% block content %}
-    {% if preview_path %}
-    <script>
-        var refreshId = setInterval(function() {
-            $.getJSON("{{ url_for('send_results', filename=preview_path) }}",
-                function(data) {
-                    if (!data) {
-                        return;
-                    } else {
-                        updateResults(data);
-                        clearInterval(refreshId);
-                    }
-            });
-        }, 200);
-        function updateResults(data) {
-            $('#preview').hide();
-
-            var old_path = '{{ old_path }}'
-            var name = old_path.substr(0, old_path.lastIndexOf('.'));
-            var ext = old_path.substr(old_path.lastIndexOf('.'));
-            if (data.gif) {
-                $('#gif').append(getImageWithDownload(data.gif, name + '.gif'));
-            }
-            for (var i = 0; i < data.frames.length; i++) {
-                $('#frames').append(getImageWithDownload(data.frames[i],
-                    name + '-' + i.toString() + ext));
-            }
+<script>
+    var images_path = 'static/images/';
+    var refreshId = setInterval(function() {
+        $.getJSON("{{ url_for('send_results', filename=preview_filename) }}",
+            function(data) {
+                if (!data) {
+                    return;
+                } else {
+                    updateResults(data);
+                    clearInterval(refreshId);
+                }
+        });
+    }, 200);
+    function updateResults(data) {
+        $('#preview').hide();
+        var old_filename = '{{ old_filename }}'
+        var name = old_filename.substr(0, old_filename.lastIndexOf('.'));
+        var ext = old_filename.substr(old_filename.lastIndexOf('.'));
+        if (data.gif) {
+            $('#gif').append(getImageWithDownload(data.gif, name + '.gif'));
         }
-        function getImageWithDownload(fileName, downloadName) {
-            return $('<a href="static/' + fileName + '" download="' +
-                downloadName + '"><img src="static/' + fileName + '" /></a>');
+        for (var i = 0; i < data.frames.length; i++) {
+            $('#frames').append(getImageWithDownload(data.frames[i],
+                name + '-' + i.toString() + ext));
         }
-    </script>
-    <div id="preview">
-        <img src="static/{{ preview_path }}" />
-    </div>
-    <div id="gif"></div>
-    <div id="frames"></div>
-    {% endif %}
+    }
+    function getImageWithDownload(fileName, downloadName) {
+        return $('<a href="' + images_path + fileName + '" download="' +
+            downloadName + '"><img src="' + images_path + fileName +
+            '" /></a>');
+    }
+    $(document).ready(function() {
+        $('#preview').append($('<img src="' + images_path
+            + '{{ preview_filename }}" />'));
+    });
+</script>
+<div id="preview"></div>
+<div id="gif"></div>
+<div id="frames"></div>
 {% endblock %}

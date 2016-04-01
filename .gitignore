@@ -1,21 +1,5 @@
 .DS_Store
 *.pyc
 env/
-ImageManipulator/static/*
-!ImageManipulator/static/jquery.js
-app.log
-
-# PTVS analysis
-.ptvs/
-
-# Build results
-/bin/
-/obj/
-
-# User-specific files
-*.suo
-*.user
-*.sln.docstates
-
-# Auto-generated web.config
-/web.config
+ImageManipulator/static/images/*
+!ImageManipulator/static/images/.gitkeep
