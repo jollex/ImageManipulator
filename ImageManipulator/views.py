@@ -1,5 +1,5 @@
-import os, sys, subprocess, json, uuid, threading
-from flask import render_template, send_from_directory, url_for, jsonify, request
+import os, subprocess, json, uuid, threading
+from flask import render_template, send_from_directory, url_for, jsonify
 from . import app
 from .forms import ImageManipulationForm
 
@@ -32,9 +32,7 @@ def send_results(filename):
 
 def start_image_processing_and_update_files(file_path, form, filename):
     """
-    This method starts the image manipulation method in the background. It also
-    passes along a callback to the method, which updates the files dict once
-    the resulting images have been created.
+    This method starts the image manipulation method in the background.
 
     :param file_path: Argument to pass to manipulate_image, the path to the
     image to manipulate.
@@ -49,8 +47,10 @@ def start_image_processing_and_update_files(file_path, form, filename):
 
 def manipulate_image(file_path, form, filename):
     """
-    Given an uploaded image, manipulats the image depending on the options
-    provided from the form.
+    Manipulates the image at the given file_path depending on the options
+    provided from the given form. Once the resulting gif/frames are returned by
+    the script, the global files dictionary is updated with the given filename
+    as the key.
 
     :param file_path: Path to the saved image
     :param form: The submitted form with configuration options
@@ -61,9 +61,8 @@ def manipulate_image(file_path, form, filename):
     arguments = ['--output', output_dir] + get_cli_arguments(form)
     command = [app.config['PYTHON'], script_path, file_path] + arguments
 
-    # the script outputs the following two lines:
-    # "path_to.gif" or ""
-    # ["path_to_frame.png", ...]
+    # the script outputs the following dictionary:
+    # {"gif": "path_to.gif", "frames": ["path_to_frame.png", ...]}
     result = subprocess.check_output(command)
     files[filename] = json.loads(result)
 
