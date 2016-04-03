@@ -7,6 +7,9 @@
         Upload your image:<br>
         {{ form.image }}<br>
         </p>
+        {% for error in form.image.errors %}
+        <span style="color: red;">{{ error }}</span>
+        {% endfor %}
     </div>
     <div id="animation-form">
         {% for option in form.animation %}
