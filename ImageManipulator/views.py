@@ -61,6 +61,10 @@ def manipulate_image(file_path, form, filename):
     arguments = ['--output', output_dir] + get_cli_arguments(form)
     command = [app.config['PYTHON'], script_path, file_path] + arguments
 
+    print command
+    print file_path
+    print filename
+
     # the script outputs the following dictionary:
     # {"gif": "path_to.gif", "frames": ["path_to_frame.png", ...]}
     result = subprocess.check_output(command)

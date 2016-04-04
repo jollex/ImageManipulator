@@ -265,9 +265,9 @@ def manipulate_image(image_path, args):
         ext = '.jpeg'
 
     if args.output and os.path.exists(args.output):
-        output = args.output
+        output = os.path.abspath(args.output)
     else:
-        output = os.path.dirname(full_name + ext) + '/'
+        output = os.path.dirname(full_name + ext)
 
     box_sizes = get_box_sizes(args.box_size, args.iterations, full_name + ext, args)
     frames, frame_paths = [], []
@@ -282,9 +282,9 @@ def manipulate_image(image_path, args):
             im.randomize_sections()
         im.crop_image()
         if args.frames or len(box_sizes) == 1:
-            base_path = '{}-{:04d}{}'.format(base_name, box_size, ext)
-            im.save(output + base_path)
-            frame_paths.append(base_path)
+            filename = '{}-{:04d}{}'.format(base_name, box_size, ext)
+            im.save(os.path.join(output, filename))
+            frame_paths.append(filename)
         frames.append(im.copy())
 
     # Crop all frames to size of smallest frame
@@ -296,9 +296,9 @@ def manipulate_image(image_path, args):
     middle_frames = frames[1:-1]
     middle_frames.reverse()
     if not (args.nogif or len(box_sizes) == 1):
-        base_path = base_name + ".gif"
-        images2gif.writeGif(output + base_path, frames + middle_frames)
-        gif_path = "{}.gif".format(base_name)
+        gif_path = base_name + ".gif"
+        images2gif.writeGif(os.path.join(output, gif_path),
+            frames + middle_frames)
     else:
         gif_path =  ''
 
