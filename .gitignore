@@ -3,3 +3,5 @@
 env/
 ImageManipulator/static/images/*
 !ImageManipulator/static/images/.gitkeep
+db_repository/
+app.db

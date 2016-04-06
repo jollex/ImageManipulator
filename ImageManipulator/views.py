@@ -1,9 +1,8 @@
 import os, subprocess, json, uuid, threading
 from flask import render_template, send_from_directory, url_for, jsonify
-from . import app
+from . import app, db
 from .forms import ImageManipulationForm
-
-files = {}
+from .models import Image
 
 @app.route('/', methods=['GET', 'POST'])
 def start():
@@ -13,24 +12,28 @@ def start():
         old_filename = form.image.data.filename
         _, ext = os.path.splitext(old_filename)
         filename = str(uuid.uuid4()) + ext
-        files[filename] = False
+        image = Image(old_filename, filename, '')
+        db.session.add(image)
+        db.session.commit()
+
         file_path = os.path.join(app.config['IMAGE_DIR'], filename)
         form.image.data.save(file_path)
+        start_image_processing_and_update_files(file_path, form, image.id)
 
-        start_image_processing_and_update_files(file_path, form, filename)
         return render_template('result.html', preview_filename=filename,
-            old_filename=old_filename)
+            old_filename=old_filename, image_id=image.id)
 
     return render_template('index.html', form=form)
 
-@app.route('/_results/<path:filename>', methods=['GET'])
-def send_results(filename):
-    if filename in files and files[filename]:
-        return jsonify(**files[filename])
+@app.route('/_results/<image_id>', methods=['GET'])
+def send_results(image_id):
+    image = Image.query.filter_by(id=image_id).first()
+    if image is not None and image.results:
+        return jsonify(**json.loads(image.results))
     else:
         return ''
 
-def start_image_processing_and_update_files(file_path, form, filename):
+def start_image_processing_and_update_files(file_path, form, image_id):
     """
     This method starts the image manipulation method in the background.
 
@@ -38,23 +41,22 @@ def start_image_processing_and_update_files(file_path, form, filename):
     image to manipulate.
     :param form: Argument to pass to manipulate_image, the form with
     configuration options.
-    :param filename: The base name of the image to manipulate, used as a key.
+    :param image_id: The id of the Image in the DB.
     """
     thread = threading.Thread(target=manipulate_image,
-        args=(file_path, form, filename))
+        args=(file_path, form, image_id))
     thread.daemon = True
     thread.start()
 
-def manipulate_image(file_path, form, filename):
+def manipulate_image(file_path, form, image_id):
     """
     Manipulates the image at the given file_path depending on the options
     provided from the given form. Once the resulting gif/frames are returned by
-    the script, the global files dictionary is updated with the given filename
-    as the key.
+    the script, the Image in the DB is updated.
 
     :param file_path: Path to the saved image
     :param form: The submitted form with configuration options
-    :param filename: The base name of the image to manipulate, used as a key.
+    :param image_id: The id of the Image in the DB
     """
     script_path = app.config['SCRIPT_PATH']
     output_dir = app.config['IMAGE_DIR']
@@ -63,32 +65,18 @@ def manipulate_image(file_path, form, filename):
 
     # the script outputs the following dictionary:
     # {"gif": "path_to.gif", "frames": ["path_to_frame.png", ...]}
-    result = subprocess.check_output(command)
-    files[filename] = json.loads(result)
+    results = subprocess.check_output(command)
+
+    image = Image.query.filter_by(id=image_id).first()
+    if image is not None:
+        image.results = results
+        db.session.commit()
 
 def get_cli_arguments(form):
     """
     Given a submitted form with configuration options for the image
     manipulation, determines which command line arugments must be given to the
     script to achieve the configuration.
-
-    Animation options:
-    Auto | One Frame | Custom
-    Box size text field
-    Number of frames text field
-    Save frames checkbox
-    If One Frame is selected, show box size text field
-    If Custom is selected, show box size and number of frames sliders
-    If Auto or Custom are selected, show save frames checkbox
-
-    Box shape options:
-    Square | Vertical | Horizontal
-
-    Effects:
-    Rotation drop down menu: [None, Flip, Ninety]; doesn't show
-    Ninety if vertical or horizontal are selected.
-    Randomize boxes checkbox
-    Average boxes checkbox
 
     :param form: The ImageManipulationForm submitted by the user.
 

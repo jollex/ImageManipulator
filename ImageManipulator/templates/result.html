@@ -3,7 +3,7 @@
 <script>
     var images_path = 'static/images/';
     var refreshId = setInterval(function() {
-        $.getJSON("{{ url_for('send_results', filename=preview_filename) }}",
+        $.getJSON("{{ url_for('send_results', image_id=image_id) }}",
             function(data) {
                 if (!data) {
                     return;

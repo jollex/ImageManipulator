@@ -1,15 +1,15 @@
 from . import db
 
-class User(db.Model):
+class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     original_filename = db.Column(db.Text, index=True)
-    save_path = db.Column(db.Text, index=True, unique=True)
-    results = db.Column(db.Text, index=True, unique=True)
+    filename = db.Column(db.Text, index=True, unique=True)
+    results = db.Column(db.Text, index=True)
 
-    def __init__(self, original_filename, save_path, results):
+    def __init__(self, original_filename, filename, results):
         self.original_filename = original_filename
-        self.save_path = save_path
+        self.filename = filename
         self.results = results
 
     def __repr__(self):
-        return '<Image %r>' % self.save_path
+        return '<Image %r>' % self.filename
