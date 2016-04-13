@@ -23,10 +23,29 @@ class ImageManipulator(object):
         :param args: The args object containing configuration values.
         """
         self.image = Image.open(image_path)
+        self.args = args
+        if args.resize:
+            self.resize()
         self.box_size = box_size
         self.boxes, self.new_w, self.new_h = self.get_boxes_and_size(box_size)
-        self.args = args
         self.ext = os.path.splitext(image_path)[1][1:]
+
+    def resize(self):
+        """
+        Resizes the image according to the arguments provided. If either the
+        width or height provided is zero, the other dimension is caluclated
+        from the dimension provided.
+        """
+        cur_width, cur_height = self.image.size
+        width, height = args.resize
+
+        if width == 0 and height != 0:
+            width = int((float(cur_width) / float(cur_height)) * height)
+        elif width != 0 and height == 0:
+            height = int((float(cur_height) / float(cur_width)) * width)
+
+        self.image = self.image.resize((width, height))
+        self.log('Resized image to ({}, {})'.format(width, height))
 
     def get_boxes_and_size(self, box_size):
         """
@@ -359,35 +378,38 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('image_path', nargs='?', default='', type=str,
         help='Path to the image to manipulate')
+    parser.add_argument('-rs', '--resize', nargs=2, metavar=('X', 'Y'),
+        default=False, type=int, help='The dimensions to resize the image to\
+        before manipulating it. Powers of two are recommended. Set either x\
+        or y to 0 to dynamically determine it from the other dimension')
     parser.add_argument('-bs', '--box_size', default=0, type=int, help='The\
         size of the boxes the first frame will be split into')
     parser.add_argument('-i', '--iterations', default=1, type=int, help='The\
         number of times to run the manipulator, multiplying box_size by 2 for\
         each iteration')
-    parser.add_argument('--auto', action='store_true', help='Use flag to auto\
-        create animations going from smallest box size to largest.')
-    parser.add_argument('-v', '--vertical', action='store_true', help='Use flag\
-        to use vertical strips instead of square boxes.')
+    parser.add_argument('--auto', action='store_true', help='Automatically\
+        create a GIF going from box size 1 to min(width, height) / 2')
+    parser.add_argument('-v', '--vertical', action='store_true', help='Use\
+        vertical strips instead of square boxes')
     parser.add_argument('-ho', '--horizontal', action='store_true', help='Use\
-        flag to use horizontal strips instead of square boxes.')
-    parser.add_argument('-f', '--flip', action='store_true', help='Use flag to\
-        flip each box')
-    parser.add_argument('-n', '--ninety', action='store_true', help='Use flag\
-        to rotate each box a random multiple of ninety degrees')
-    parser.add_argument('-r', '--random', action='store_true', help='Use flag\
-        to randomize position of boxes')
-    parser.add_argument('-a', '--average', action='store_true', help='Use flag\
-        to turn each box into the average of its pixels')
-    parser.add_argument('--frames', action='store_true', help='Use flag to save\
-        each frame along with the gif')
-    parser.add_argument('--nogif', action='store_true', help='Use flag to not\
-        create a gif with the resulting frames.')
-    parser.add_argument('-o', '--output', default='', type=str, help="Path to\
-        directory to save gif and/or frames in.")
-    parser.add_argument('--directory', default='', type=str, help="Directory\
-        containing image files to do operations on, recursive.")
-    parser.add_argument('-d', '--debug', action='store_true', help='Use flag to\
-        print debugging statements while the script runs')
+        horizontal strips instead of square boxes.')
+    parser.add_argument('-f', '--flip', action='store_true', help='Flip each\
+        box')
+    parser.add_argument('-n', '--ninety', action='store_true', help='Rotate\
+        each box a random multiple of ninety degrees')
+    parser.add_argument('-r', '--random', action='store_true', help='Randomize\
+        position of boxes')
+    parser.add_argument('-a', '--average', action='store_true', help='Color\
+        each box the average color of its pixels')
+    parser.add_argument('--frames', action='store_true', help='Save each frame\
+        along with the gif')
+    parser.add_argument('--nogif', action='store_true', help='Do not create a\
+        gif with the resulting frames')
+    parser.add_argument('-o', '--output', default='', type=str, help='Path to\
+        directory to save gif and/or frames in')
+    parser.add_argument('-dir', '--directory', default='', type=str,
+        help='Directory containing image files to do operations on, recursive.')
+    parser.add_argument('-d', '--debug', action='store_true')
     args = parser.parse_args()
 
     if args.directory:
