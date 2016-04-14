@@ -339,6 +339,8 @@ def get_box_sizes(initial_box_size, iterations, image_path, args):
 
     :return: A list of integers.
     """
+    multiplier = 1 if args.constant else 2
+
     box_sizes = []
     box_size = 1 if args.auto else initial_box_size
     if args.auto:
@@ -352,11 +354,11 @@ def get_box_sizes(initial_box_size, iterations, image_path, args):
 
         while box_size * 2 <= max_size:
             box_sizes.append(box_size)
-            box_size *= 2 # also the most important line
+            box_size *= multiplier # the most important line
     else:
         for i in range(iterations):
             box_sizes.append(box_size)
-            box_size *= 2 # the most important line
+            box_size *= multiplier # also the most important line
     return box_sizes
 
 def get_rotate_options(args):
@@ -387,6 +389,8 @@ if __name__=='__main__':
     parser.add_argument('-i', '--iterations', default=1, type=int, help='The\
         number of times to run the manipulator, multiplying box_size by 2 for\
         each iteration')
+    parser.add_argument('-c', '--constant', action='store_true', help='Keep the\
+        box size the same for each iteration')
     parser.add_argument('--auto', action='store_true', help='Automatically\
         create a GIF going from box size 1 to min(width, height) / 2')
     parser.add_argument('-v', '--vertical', action='store_true', help='Use\
