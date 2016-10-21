@@ -20,7 +20,8 @@
 9. Create a VirtualHost file
 `sudo vi /etc/apache2/sites-available/ImageManipulator.conf
 10. Add following text to file
-```<VirtualHost *:80>
+```xml
+<VirtualHost *:80>
                 ServerName gifoofoo.alexjolly.me
                 ServerAdmin alex@alexjolly.me
                 WSGIScriptAlias / /var/www/ImageManipulator/ImageManipulator.wsgi
@@ -36,7 +37,8 @@
                 ErrorLog ${APACHE_LOG_DIR}/error.log
                 LogLevel warn
                 CustomLog ${APACHE_LOG_DIR}/access.log combined
-</VirtualHost>```
+</VirtualHost>
+```
 11. Enable the VirtualHost
 `sudo a2ensite ImageManipulator`
 12. Restart apache
