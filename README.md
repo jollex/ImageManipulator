@@ -18,7 +18,7 @@
 8. Install requirements
 `pip install -r requirements.txt`
 9. Create a VirtualHost file
-`sudo vi /etc/apache2/sites-available/ImageManipulator.conf
+`sudo vi /etc/apache2/sites-available/ImageManipulator.conf`
 10. Add following text to file
 ```xml
 <VirtualHost *:80>
